@@ -10,6 +10,9 @@ void bb_init()
 {
 	get_screen_size();
 	load_textures();
+	glClearColor(0, 0, 0, 0);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA ,GL_ONE_MINUS_SRC_ALPHA);  
 }
 
 void load_textures()
@@ -18,6 +21,71 @@ void load_textures()
 	load_wood();
 	load_items();
 	load_spells();
+	load_map();
+	load_blank();
+}
+
+void load_blank()
+{
+	FILE *fp = NULL;
+	int i,j;
+	int R,G,B,A;
+	blank = malloc(sizeof(char) * 64 * 64 * 4);
+
+	fp = fopen("./data/blank","rw+");
+	for (j = 0; j < 64; ++j) {
+		for (i = 0; i < 64; ++i) {
+			R = next(fp);
+			G = next(fp);
+			B = next(fp);
+			A = next(fp);
+			blank[(j*64 + i)*4] = (char) R;
+			blank[(j*64 + i)*4 + 1] = (char) G;
+			blank[(j*64 + i)*4 + 2] = (char) B;
+			blank[(j*64 + i)*4 + 3] = (char) A;
+		}
+	}
+	fclose(fp);
+}
+
+void load_map()
+{
+	FILE *fp = NULL;
+	int i,j;
+	int R,G,B,A;
+	map = malloc(sizeof(char) * 1500 * 1500);
+
+	fp = fopen("./data/map","rw+");
+	for (j = 0; j < 1500; ++j) {
+		for (i = 0; i < 1500; ++i) {
+			R = next(fp);
+			G = next(fp);
+			B = next(fp);
+			A = next(fp);
+			if (R == 0 && G == 0 && B == 0) {
+				map[j*1500 + i] = 1;
+			} else {
+				map[j*1500 + i] = 0;
+			}
+		}
+	}
+	fclose(fp);
+
+	small_map = malloc(sizeof(char) * 360 * 360 * 4);
+	fp = fopen("./data/map2","rw+");
+	for (j = 0; j < 360; ++j) {
+		for (i = 0; i < 360; ++i) {
+			R = next(fp);
+			G = next(fp);
+			B = next(fp);
+			A = next(fp);
+			small_map[(j*360 + i)*4] = (char) R;
+			small_map[(j*360 + i)*4 + 1] = (char) G;
+			small_map[(j*360 + i)*4 + 2] = (char) B;
+			small_map[(j*360 + i)*4 + 3] = (char) A;
+		}
+	}
+	fclose(fp);
 }
 
 void load_wood()

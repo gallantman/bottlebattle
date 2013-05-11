@@ -7,6 +7,9 @@ double SCALEX, SCALEY;
 
 char *grass;
 char *wood;
+char *map;
+char *blank;
+char *small_map;
 char **items;
 char **spells;
 
@@ -22,6 +25,8 @@ void load_grass(void);
 void load_wood(void);
 void load_items(void);
 void load_spells(void);
+void load_map(void);
+void load_blank(void);
 int dtoi(double val);
 int next(FILE *fp);
 void bb_display_left(void);
