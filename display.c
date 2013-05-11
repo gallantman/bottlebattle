@@ -10,3 +10,13 @@ void bb_display(void)
 {
 	glutPostRedisplay();
 }
+
+void bb_display_left(void)
+{
+
+}
+
+void bb_display_right(void)
+{
+	
+}
