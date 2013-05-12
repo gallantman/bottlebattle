@@ -8,11 +8,106 @@
 
 void bb_init()
 {
+	int i;
 	get_screen_size();
+	for (i = 0; i < 80; ++i) {
+		spell_chosen_map[i] = 0;
+	}
 	load_textures();
+	init_creatures();
 	glClearColor(0, 0, 0, 0);
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA ,GL_ONE_MINUS_SRC_ALPHA);  
+	glBlendFunc(GL_SRC_ALPHA ,GL_ONE_MINUS_SRC_ALPHA);
+	state = CHOOSE;  
+}
+
+void init_creatures()
+{
+	int i,j;
+	my = malloc(sizeof(struct hero));
+	my->level = 1;
+	my->pos.x = my->pos.y = 50;
+	my->pos.z = 0;
+	my->direction.x = my->direction.y = my->direction.z = 0;
+	my->speed = 0;
+	my->damage = 50;
+	my->armor = 2;
+	my->strength = 25;
+	my->agility = 30;
+	my->intelligence = 20;
+	my->full_blood = my->blood = 200 + my->strength*19;
+	my->full_mana = my->mana = 150 + my->intelligence*13;
+	my->is_live = 0;
+	my->state = NORMAL;
+	my->party = SENTINEL;
+	my->color.R = 150;
+	my->color.G = 50;
+	my->color.B = 200;
+	for (i = 0; i < 5; ++i) {
+		my->spell[i] = -1;
+	}
+	for (i = 0; i < 8; ++i) {
+		my->item[i] = -1;
+	}
+	my->experience = 0;
+
+	for (j = 0; j < 4; ++j) {
+		ally[j] = malloc(sizeof(struct hero));
+		ally[j]->level = 1;
+		ally[j]->pos.x = ally[j]->pos.y = 50;
+		ally[j]->pos.z = 0;
+		ally[j]->direction.x = ally[j]->direction.y = ally[j]->direction.z = 0;
+		ally[j]->speed = 0;
+		ally[j]->damage = 50;
+		ally[j]->armor = 2;
+		ally[j]->strength = 25;
+		ally[j]->agility = 30;
+		ally[j]->intelligence = 20;
+		ally[j]->full_blood = ally[j]->blood = 200 + ally[j]->strength*19;
+		ally[j]->full_mana = ally[j]->mana = 150 + ally[j]->intelligence*13;
+		ally[j]->is_live = 0;
+		ally[j]->state = NORMAL;
+		ally[j]->party = SENTINEL;
+		ally[j]->color.R = 150;
+		ally[j]->color.G = 50;
+		ally[j]->color.B = 200;
+		for (i = 0; i < 5; ++i) {
+			ally[j]->spell[i] = -1;
+		}
+		for (i = 0; i < 8; ++i) {
+			ally[j]->item[i] = -1;
+		}
+		ally[j]->experience = 0;
+	}
+
+	for (j = 0; j < 5; ++j) {
+		enemy[j] = malloc(sizeof(struct hero));
+		enemy[j]->level = 1;
+		enemy[j]->pos.x = enemy[j]->pos.y = 50;
+		enemy[j]->pos.z = 0;
+		enemy[j]->direction.x = enemy[j]->direction.y = enemy[j]->direction.z = 0;
+		enemy[j]->speed = 0;
+		enemy[j]->damage = 50;
+		enemy[j]->armor = 2;
+		enemy[j]->strength = 25;
+		enemy[j]->agility = 30;
+		enemy[j]->intelligence = 20;
+		enemy[j]->full_blood = enemy[j]->blood = 200 + enemy[j]->strength*19;
+		enemy[j]->full_mana = enemy[j]->mana = 150 + enemy[j]->intelligence*13;
+		enemy[j]->is_live = 0;
+		enemy[j]->state = NORMAL;
+		enemy[j]->party = SENTINEL;
+		enemy[j]->color.R = 150;
+		enemy[j]->color.G = 50;
+		enemy[j]->color.B = 200;
+		for (i = 0; i < 5; ++i) {
+			enemy[j]->spell[i] = -1;
+		}
+		for (i = 0; i < 8; ++i) {
+			enemy[j]->item[i] = -1;
+		}
+		enemy[j]->experience = 0;
+	}
 }
 
 void load_textures()
