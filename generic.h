@@ -23,6 +23,7 @@ char **spells;
 char *num[10];
 int spell_chosen_map[80];
 GLuint grass_texture;
+GLubyte grass_image[64][64][4];
 
 int state;
 int soldier_count;
@@ -91,6 +92,7 @@ struct soldier {
 	struct soldier *next;
 };
 
+void init_texture();
 void load_num(void);
 int enough_ball(int i, int j);
 void refresh_border();

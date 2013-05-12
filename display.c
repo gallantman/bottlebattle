@@ -72,17 +72,25 @@ void render_grass()
 	int i,j;
 	glMatrixMode(GL_MODELVIEW);    
 	glLoadIdentity();
-	for (j = -200; j < 200; ++j) {
-		for (i = -200; i < 200; ++i) {
+	glEnable(GL_NORMALIZE);
+
+	glBindTexture(GL_TEXTURE_2D, grass_texture);
+	glEnable(GL_TEXTURE_2D);
+	for (j = -40; j < 40; ++j) {
+		for (i = -40; i < 40; ++i) {
 			glBegin(GL_POLYGON);
-			glTexCoord2f(0.0, 0.0); 
-			glVertex3f(0.0 + 5.0*i, 0.0 + 5.0*j, 0.0);
-			glTexCoord2f(0.0, 1.0); 
-			glVertex3f(0.0 + 5.0*i, 5.0 + 5.0*j, 0.0);
-			glTexCoord2f(1.0, 1.0); 
-			glVertex3f(5.0 + 5.0*i, 5.0 + 5.0*j, 0.0);
-			glTexCoord2f(1.0, 0.0); 
-			glVertex3f(5.0 + 5.0*i, 0.0 + 5.0*j, 0.0);
+			glTexCoord2f(0.0, 0.0);
+			glNormal3f(0.0, 0.0, 1.0);
+			glVertex3f(0.0 + 25.0*i, 0.0 + 25.0*j, 0.0);
+			glTexCoord2f(0.0, 1.0);
+			glNormal3f(0.0, 0.0, 1.0);
+			glVertex3f(0.0 + 25.0*i, 25.0 + 25.0*j, 0.0);
+			glTexCoord2f(1.0, 1.0);
+			glNormal3f(0.0, 0.0, 1.0);
+			glVertex3f(25.0 + 25.0*i, 25.0 + 25.0*j, 0.0);
+			glTexCoord2f(1.0, 0.0);
+			glNormal3f(0.0, 0.0, 1.0);
+			glVertex3f(25.0 + 25.0*i, 0.0 + 25.0*j, 0.0);
 			glEnd();
 		}
 	}
@@ -93,7 +101,7 @@ void render_bottles()
 	int i,j;
 	glMatrixMode(GL_MODELVIEW);    
 	glLoadIdentity();
-
+	glDisable(GL_TEXTURE_2D);
 	for (j = (int) (camera_direction.y - 60); j < (int) (camera_direction.y + 130); ++j) {
 		for (i = (int) (camera_direction.x - 130); i < (int) (camera_direction.x + 130); ++i) {
 			if (!(i%5 == 0) || !(j%5 == 0)) {
@@ -125,7 +133,7 @@ void right_render_choose()
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	gluOrtho2D(0, 400, 0, 1080);
-	glClear(GL_COLOR_BUFFER_BIT);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glRasterPos2i(0, 0);
 	glDrawPixels(400, 1080, GL_BGRA, GL_UNSIGNED_BYTE, wood);
 	glRasterPos2i(20, 700);

@@ -14,6 +14,21 @@ void bb_init()
 
 	light_init();
 	init_left_light();
+	init_texture();
+}
+
+void init_texture()
+{
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glActiveTexture(GL_TEXTURE0);
+	glGenTextures(1, &grass_texture);
+	glBindTexture(GL_TEXTURE_2D, grass_texture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 200, 200, 0, GL_RGBA, GL_UNSIGNED_BYTE, grass);
 }
 
 void light_init()
