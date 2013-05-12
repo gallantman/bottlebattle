@@ -8,17 +8,62 @@
 
 void bb_init()
 {
-	int i;
-	get_screen_size();
-	for (i = 0; i < 80; ++i) {
-		spell_chosen_map[i] = 0;
-	}
-	load_textures();
-	init_creatures();
 	glClearColor(0, 0, 0, 0);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA ,GL_ONE_MINUS_SRC_ALPHA);
-	state = CHOOSE;  
+	state = CHOOSE;
+	light_inited = 0;
+
+	light_init();
+	init_left_light();
+}
+
+void light_init()
+{
+	lig_ambient[0] = 1.0;
+	lig_ambient[1] = 1.0;
+	lig_ambient[2] = 1.0;
+	lig_ambient[3] = 1.0;
+	lig_diffuse[0] = 1.0;
+	lig_diffuse[1] = 1.0;
+	lig_diffuse[2] = 1.0;
+	lig_diffuse[3] = 1.0;
+	lig_position[0] = camera_pos.x;
+	lig_position[1] = camera_pos.y;
+	lig_position[2] = camera_pos.z;
+	lig_position[3] = 0.0;
+	mat_diffuse[0] = 0.8;
+	mat_diffuse[1] = 0.8;
+	mat_diffuse[2] = 0.8;
+	mat_diffuse[3] = 1.0;
+	mat_specular[0] = 1.0;
+	mat_specular[1] = 1.0;
+	mat_specular[2] = 1.0;
+	mat_specular[3] = 1.0;
+	mat_shininess[0] = 30.0; 
+}
+
+void init_soldier_heads()
+{
+	soldier_count = 0;
+	a_head = malloc(sizeof(struct soldier));
+	a_tail = malloc(sizeof(struct soldier));
+	e_head = malloc(sizeof(struct soldier));
+	e_tail = malloc(sizeof(struct soldier));
+	a_head->party = -1;
+	a_tail->party = -1;
+	e_head->party = -1;
+	e_tail->party = -1;
+	a_head->next = a_tail;
+	a_tail->prev = a_head;
+	e_head->next = e_tail;
+	e_tail->prev = e_head;
+}
+
+void init_camera()
+{
+	camera_pos.x = 0.0;
+	camera_pos.y = -51.9615;
+	camera_pos.z = 51.9615;
+	camera_direction.x = camera_direction.y = camera_direction.z = 0.0;
 }
 
 void init_creatures()
@@ -143,6 +188,36 @@ void load_blank()
 	fclose(fp);
 }
 
+void load_num()
+{
+	FILE *fp = NULL;
+	int i,j,k;
+	int R,G,B,A;
+	char *path;
+	path = malloc(sizeof(char)*13);
+	memcpy(path, "./data/num/", sizeof(char)*12);
+
+	for (k = 0; k < 10; ++k) {
+		num[k] = malloc(sizeof(char) * 50 * 50 * 4);
+		path[11] = (char) (i + 48);
+		path[12] = '\0';
+		fp = fopen(path, "rw+");
+		for (j = 0; j < 50; ++j) {
+			for (i = 0; i < 50; ++i) {
+				R = next(fp);
+				G = next(fp);
+				B = next(fp);
+				A = next(fp);
+				num[k][(j*50 + i)*4] = (char) R;
+				num[k][(j*50 + i)*4 + 1] = (char) G;
+				num[k][(j*50 + i)*4 + 2] = (char) B;
+				num[k][(j*50 + i)*4 + 3] = (char) A;
+			}
+		}
+		fclose(fp);
+	}
+}
+
 void load_map()
 {
 	FILE *fp = NULL;
@@ -165,6 +240,18 @@ void load_map()
 		}
 	}
 	fclose(fp);
+
+	map2 = malloc(sizeof(char) * 300 * 300);
+
+	for (j = 0; j < 300; ++j) {
+		for (i = 0; i < 300; ++i) {
+			if (enough_ball(i, j)) {
+				map2[j*300 + i] = 1;
+			} else {
+				map2[j*300 + i] = 0;
+			}
+		}
+	}
 
 	small_map = malloc(sizeof(char) * 360 * 360 * 4);
 	fp = fopen("./data/map2","rw+");

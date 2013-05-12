@@ -25,8 +25,9 @@ int full_spell(struct hero *hero)
 {
 	int i;
 	for (i = 0; i < 5; ++i) {
-		if (hero->spell[i] == -1)
+		if (hero->spell[i] == -1) {
 			return 0;
+		}
 	}
 	return 1;
 }
@@ -41,4 +42,23 @@ void set_hero_spell(struct hero *hero, int spell)
 			return;
 		}
 	}
+}
+
+int enough_ball(int i, int j)
+{
+	int count = 0;
+	int m, n;
+	for (m = j*5; m < (j+1)*5; ++m) {
+		for (n = i*5; n < (i+1)*5; ++n) {
+			if (map[m*1500 + n] == 1) {
+				++count;
+			}
+		}
+	}
+
+	if (count > 4) {
+		return 1;
+	}
+
+	return 0;
 }
