@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
+#include <math.h>
 #include "generic.h"
 	
 void bb_keyboard(unsigned char key, int x, int y)
@@ -42,6 +43,14 @@ void bb_keyboard(unsigned char key, int x, int y)
 		} else {
 			camera_pos.x += GAIN;
 		}
+	}
+
+	if (key == ' ') {
+		camera_direction.x = my->pos.x;
+		camera_direction.y = my->pos.y;
+		camera_pos.x = camera_direction.x;
+		camera_pos.y = camera_direction.y - 51.9615;
+		my->state = FOCUSED;
 	}
 }
 	
@@ -96,7 +105,7 @@ void bb_mouse_left(int button, int press_state, int x, int y)
 {
 	if (state == CHOOSE) {
 		int screenx = x;
-		int screeny = 1080-y;
+		int screeny = 1080 - y;
 		if (button == GLUT_LEFT_BUTTON) {
 			int gridx = screenx/152;
 			int gridy = screeny/135;
@@ -106,6 +115,46 @@ void bb_mouse_left(int button, int press_state, int x, int y)
 				set_hero_spell(my, gridy*10 + gridx);
 				if (full_spell(my)) {
 					state = FIGHT;
+				}
+			}
+		}
+	} else if (state == FIGHT) {
+		int screenx = x;
+		int screeny = 1080 - y;
+		int mapx, mapy;
+		int id;
+		
+		get_intersect_point(screenx, screeny, &mapx, &mapy);
+		if (button == GLUT_LEFT_BUTTON) {
+			if (click_my(mapx, mapy)) {
+				my->state = FOCUSED;
+				my->target_bottle = my->target_tower = -1;
+				return;
+			}
+		} else if (button == GLUT_RIGHT_BUTTON && 
+			((my->state == ATTACK) || (my->state == FOCUSED))) {
+			if (click_ground(mapx, mapy)) {
+				float val = sqrt((mapx - my->pos.x)*(mapx - my->pos.x) + (mapy - my->pos.y)*(mapy - my->pos.y));
+				float ratiox = (float) (mapx - my->pos.x) / val;
+				float ratioy = (float) (mapy - my->pos.y) / val;
+				my->speed = BOTTLE_SPEED;
+				my->direction.x = my->speed*ratiox;
+				my->direction.y = my->speed*ratioy;
+				my->state = FOCUSED;
+				my_dstx = mapx;
+				my_dsty = mapy;
+			} else {
+				id = click_enemy_bottle(mapx, mapy);
+				if (id != -1) {
+					my->state = ATTACK;
+					my->target_bottle = id;
+					return;
+				}
+				id = click_enemy_tower(mapx, mapy);
+				if (id != -1) {
+					my->state = ATTACK;
+					my->target_tower = id;
+					return;
 				}
 			}
 		}
@@ -131,7 +180,7 @@ void bb_mouse_right(int button, int press_state, int x, int y)
 		ratio = (float) 1500 / (float) 360;
 		relativex = x - 20;
 		relativey = (1080 - y) - 700;
-		if (x >= 0 && x < 360 && y >= 0 && y < 360) {
+		if (relativex >= 0 && relativex < 360 && relativey >= 0 && relativey < 360) {
 			camera_direction.x = ratio*relativex - 750;
 			camera_direction.y = ratio*relativey - 750;
 			camera_pos.x = camera_direction.x;

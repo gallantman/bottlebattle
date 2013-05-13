@@ -3,6 +3,19 @@
 
 #define GAIN 2
 
+#define BULLET_SPEED 6
+#define BOTTLE_SPEED 1
+
+#define MY_BOTTLE 1
+#define ALLY_BOTTLE 2
+#define ENEMY_BOTTLE 3
+#define ALLY_TOWER 4
+#define ALLY_BASE 5
+#define ENEMY_TOWER 6
+#define ENEMY_BASE 7
+#define BULLET 8
+#define OBSTACLE 9
+
 int SCREEN_WIDTH;
 int SCREEN_HEIGHT;
 int MAIN_WINDOW;
@@ -11,6 +24,8 @@ int RIGHT_WINDOW;
 double SCALEX, SCALEY;
 
 int border[4]; /* up, down, left, right */
+
+int my_dstx, my_dsty;
 
 char *grass;
 char *wood;
@@ -76,6 +91,12 @@ struct hero {
 	int spell[5];
 	int experience;
 	int item[8];
+	int target_tower;
+	int target_bottle;
+	int dummy_counter;
+	int kill;
+	int own_item[8];
+	float angle;
 };
 
 struct soldier {
@@ -92,12 +113,47 @@ struct soldier {
 	struct soldier *next;
 };
 
-void init_texture();
+struct tower {
+	struct pos pos;
+	int damage;
+	int armor;
+	int full_blood;
+	int blood;
+	int party;
+	float size;
+	int direction;
+	struct color color;
+	int target;
+};
+
+struct bullet {
+	int speed;
+	struct pos pos;
+	struct direction direction;
+	int damage;
+	int owner;
+	int target_tower;
+	int target_bottle;
+	struct bullet *prev;
+	struct bullet *next;
+};
+
+struct bullet *bullet_head;
+struct bullet *bullet_tail;
+
+int click_ground(int mapx, int mapy);
+int click_enemy_bottle(int mapx, int mapy);
+int click_enemy_tower(int mapx, int mapy);
+void init_bullet_head(void);
+void render_tower(void);
+void bb_set_materil(int type);
+void init_tower(void);
+void init_texture(void);
 void load_num(void);
 int enough_ball(int i, int j);
-void refresh_border();
-int in_border();
-void light_init();
+void refresh_border(void);
+int in_border(void);
+void light_init(void);
 void right_render_choose(void);
 void init_left_light(void);
 void bb_display(int value);
@@ -124,12 +180,31 @@ void bb_mouse_right(int button, int state, int x, int y);
 int full_spell(struct hero *hero);
 void set_hero_spell(struct hero *hero, int spell);
 void refresh(void);
-void render_map();
-void render_grass();
-void render_bottles();
-void set_view();
-void init_camera();
-void init_soldier_heads();
+void render_map(void);
+void render_grass(void);
+void render_bottles(void);
+void set_view(void);
+void init_camera(void);
+void init_soldier_heads(void);
+void render_my(void);
+void render_fighters(void);
+void render_bullets(void);
+void get_intersect_point(int x, int y, int *resx, int *resy);
+int click_my(int x, int y);
+void refresh_position(void);
+void refresh_bottle_positions(void);
+void refresh_bullet_positions(void);
+void hit_system(void);
+void refresh_my_status(void);
+int is_at_obstacle(int x, int y);
+void adjust_bottle_target();
+int rand_bottle(int type);
+int rand_tower(int type);
+int get_level_from_experience(int exp);
+void init_level(void);
+void test_exit(void);
+void adjust_bottle_angle(void);
+float bb_abs(float val);
 
 #define NORMAL 0
 #define FOCUSED 1
@@ -140,9 +215,14 @@ void init_soldier_heads();
 #define SENTINEL 0
 #define SCOURGE 1
 
+#define SHOT 50
+
 struct hero *my;
-struct hero *ally[4];
-struct hero *enemy[5];
+struct hero *ally[9];
+struct hero *enemy[10];
+
+struct tower e_tower[10];
+struct tower a_tower[10];
 
 struct soldier *a_head;
 struct soldier *a_tail;
@@ -151,3 +231,7 @@ struct soldier *e_tail;
 
 struct pos camera_pos;
 struct direction camera_direction;
+
+#define PI 3.1415927
+
+int level_experience[25];

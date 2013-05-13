@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <string.h>
+#include <math.h>
 #include "generic.h"
 
 int dtoi(double val)
@@ -61,4 +62,104 @@ int enough_ball(int i, int j)
 	}
 
 	return 0;
+}
+
+void get_intersect_point(int x, int y, int *resx, int *resy)
+{
+	int newx = x - 760;
+	int newy = y - 540;
+	float ratiox = (float) newx / (float) 760;
+	float ratioy = (float) newy / (float) 540;
+	float tempx = ratiox * 0.812567;
+	float tempy = ratioy * 0.57735;
+	float finalx = tempx;
+	float finaly = 0.70711 + tempy*0.70711;
+	float finalz = -0.70711 + tempy*0.70711;
+	float fratiox = finalx / -finalz;
+	float fratioy = finaly / -finalz;
+	*resx = (int) (51.9615*fratiox + camera_pos.x + 0.5);
+	*resy = (int) (51.9615*fratioy + camera_pos.y + 0.5);
+}
+
+int click_my(int x, int y)
+{
+	float dist;
+	dist = sqrt((x - my->pos.x)*(x - my->pos.x) + (y - my->pos.y)*(y - my->pos.y));
+	if (dist <= 6.0) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+int click_ground(int x, int y)
+{
+	return (click_enemy_bottle(x, y) == -1) && (click_enemy_tower(x, y) == -1);
+}
+
+int click_enemy_bottle(int x, int y)
+{
+	int i;
+	float dist;
+
+	for (i = 0; i < 10; ++i) {
+		dist = sqrt((x - enemy[i]->pos.x)*(x - enemy[i]->pos.x) + (y - enemy[i]->pos.y)*(y - enemy[i]->pos.y));
+		if (dist <= 6.0) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+int click_enemy_tower(int x, int y)
+{
+	int i;
+	float dist;
+
+	for (i = 0; i < 10; ++i) {
+		dist = sqrt((x - e_tower[i].pos.x)*(x - e_tower[i].pos.x) + (y - e_tower[i].pos.y)*(y - e_tower[i].pos.y));
+		if (i == 0 || i == 3 || i == 6) {
+			if (dist <= 10) {
+				return i;
+			}
+		} else if (i == 1 || i == 4 || i == 7) {
+			if (dist <= 12) {
+				return i;
+			}
+		} else if (i == 2 || i == 5 || i == 8) {
+			if (dist <= 14) {
+				return i;
+			}
+		} else if (i == 9) {
+			if (dist <= 18) {
+				return i;
+			}
+		}
+	}
+
+	return -1;
+}
+
+int get_level_from_experience(int exp)
+{
+	int res = 0;
+
+	int i;
+	for (i = 0; i < 25; ++i) {
+		if (exp >= level_experience[i]) {
+			++res;
+		}
+	}
+
+	return res;
+}
+
+float bb_abs(float val)
+{
+	if (val >= 0) {
+		return val;
+	}
+
+	return -val;
 }

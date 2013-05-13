@@ -13,8 +13,52 @@ void bb_init()
 	light_inited = 0;
 
 	light_init();
+	init_level();
+	init_tower();
 	init_left_light();
 	init_texture();
+	init_bullet_head();
+}
+
+void init_level()
+{
+	level_experience[0] = 0;
+	level_experience[1] = 200;
+	level_experience[2] = 600;
+	level_experience[3] = 1200;
+	level_experience[4] = 2000;
+	level_experience[5] = 3000;
+	level_experience[6] = 4200;
+	level_experience[7] = 5600;
+	level_experience[8] = 7200;
+	level_experience[9] = 9000;
+	level_experience[10] = 11000;
+	level_experience[11] = 13200;
+	level_experience[12] = 15600;
+	level_experience[13] = 18200;
+	level_experience[14] = 21000;
+	level_experience[15] = 24000;
+	level_experience[16] = 27200;
+	level_experience[17] = 30600;
+	level_experience[18] = 34200;
+	level_experience[19] = 38000;
+	level_experience[20] = 42000;
+	level_experience[21] = 46200;
+	level_experience[22] = 50600;
+	level_experience[23] = 55200;
+	level_experience[24] = 60000;
+}
+
+void init_bullet_head()
+{
+	bullet_head = malloc(sizeof(struct bullet));
+	bullet_tail = malloc(sizeof(struct bullet));
+	bullet_head->owner = -1;
+	bullet_tail->owner = -1;
+	bullet_head->next = bullet_tail;
+	bullet_head->prev = NULL;
+	bullet_tail->prev = bullet_head;
+	bullet_tail->next = NULL;
 }
 
 void init_texture()
@@ -86,8 +130,9 @@ void init_creatures()
 	int i,j;
 	my = malloc(sizeof(struct hero));
 	my->level = 1;
-	my->pos.x = my->pos.y = 50;
-	my->pos.z = 0;
+	my->pos.x = -700;
+	my->pos.y = -500;
+	my->pos.z = 5;
 	my->direction.x = my->direction.y = my->direction.z = 0;
 	my->speed = 0;
 	my->damage = 50;
@@ -103,6 +148,9 @@ void init_creatures()
 	my->color.R = 150;
 	my->color.G = 50;
 	my->color.B = 200;
+	my->target_tower = -1;
+	my->target_bottle = -1;
+	my->experience = 0;
 	for (i = 0; i < 5; ++i) {
 		my->spell[i] = -1;
 	}
@@ -110,12 +158,14 @@ void init_creatures()
 		my->item[i] = -1;
 	}
 	my->experience = 0;
+	my->dummy_counter = 0;
 
-	for (j = 0; j < 4; ++j) {
+	for (j = 0; j < 9; ++j) {
 		ally[j] = malloc(sizeof(struct hero));
 		ally[j]->level = 1;
-		ally[j]->pos.x = ally[j]->pos.y = 50;
-		ally[j]->pos.z = 0;
+		ally[j]->pos.x = -700 + 20*(j+1);
+		ally[j]->pos.y = -500 - 20*(j+1);
+		ally[j]->pos.z = 5;
 		ally[j]->direction.x = ally[j]->direction.y = ally[j]->direction.z = 0;
 		ally[j]->speed = 0;
 		ally[j]->damage = 50;
@@ -138,13 +188,17 @@ void init_creatures()
 			ally[j]->item[i] = -1;
 		}
 		ally[j]->experience = 0;
+		ally[j]->target_bottle = -1;
+		ally[j]->target_tower = -1;
+		ally[j]->dummy_counter = 0;
 	}
 
-	for (j = 0; j < 5; ++j) {
+	for (j = 0; j < 10; ++j) {
 		enemy[j] = malloc(sizeof(struct hero));
 		enemy[j]->level = 1;
-		enemy[j]->pos.x = enemy[j]->pos.y = 50;
-		enemy[j]->pos.z = 0;
+		enemy[j]->pos.x = 700 - 20*j;
+		enemy[j]->pos.y = 500 + 20*j;
+		enemy[j]->pos.z = 5;
 		enemy[j]->direction.x = enemy[j]->direction.y = enemy[j]->direction.z = 0;
 		enemy[j]->speed = 0;
 		enemy[j]->damage = 50;
@@ -167,6 +221,9 @@ void init_creatures()
 			enemy[j]->item[i] = -1;
 		}
 		enemy[j]->experience = 0;
+		enemy[j]->target_tower = -1;
+		enemy[j]->target_bottle = -1;
+		enemy[j]->dummy_counter = 0;
 	}
 }
 
@@ -405,4 +462,207 @@ void get_screen_size()
 	SCREEN_HEIGHT = glutGet(GLUT_SCREEN_HEIGHT);
 	SCALEX = (double) SCREEN_WIDTH / (double) 1920.0;
 	SCALEY = (double) SCREEN_HEIGHT / (double) 1080.0;
+}
+
+void init_tower()
+{
+	a_tower[0].size = 10;
+	a_tower[0].pos.x = -580;
+	a_tower[0].pos.y = 334;
+	a_tower[0].pos.z = a_tower[0].size/2;
+	a_tower[0].damage = 140;
+	a_tower[0].armor = 2;
+	a_tower[0].blood = a_tower[0].full_blood = 1450;
+	a_tower[0].party = SCOURGE;
+	a_tower[0].direction = 90;
+
+	a_tower[1].size = 12;
+	a_tower[1].pos.x = -586;
+	a_tower[1].pos.y = 14;
+	a_tower[1].pos.z = a_tower[1].size/2;
+	a_tower[1].damage = 180;
+	a_tower[1].armor = 5;
+	a_tower[1].blood = a_tower[1].full_blood = 1850;
+	a_tower[1].party = SCOURGE;
+	a_tower[1].direction = 90;
+
+	a_tower[2].size = 14;
+	a_tower[2].pos.x = -572;
+	a_tower[2].pos.y = -452;
+	a_tower[2].pos.z = a_tower[2].size/2;
+	a_tower[2].damage = 180;
+	a_tower[2].armor = 15;
+	a_tower[2].blood = a_tower[2].full_blood = 2350;
+	a_tower[2].party = SCOURGE;
+	a_tower[2].direction = 90;
+
+	a_tower[3].size = 10;
+	a_tower[3].pos.x = -70;
+	a_tower[3].pos.y = -96;
+	a_tower[3].pos.z = a_tower[3].size/2;
+	a_tower[3].damage = 140;
+	a_tower[3].armor = 2;
+	a_tower[3].blood = a_tower[3].full_blood = 1450;
+	a_tower[3].party = SCOURGE;
+	a_tower[3].direction = 45;
+
+	a_tower[4].size = 12;
+	a_tower[4].pos.x = -218;
+	a_tower[4].pos.y = -290;
+	a_tower[4].pos.z = a_tower[4].size/2;
+	a_tower[4].damage = 180;
+	a_tower[4].armor = 5;
+	a_tower[4].blood = a_tower[4].full_blood = 1850;
+	a_tower[4].party = SCOURGE;
+	a_tower[4].direction = 45;
+
+	a_tower[5].size = 14;
+	a_tower[5].pos.x = -394;
+	a_tower[5].pos.y = -476;
+	a_tower[5].pos.z = a_tower[5].size/2;
+	a_tower[5].damage = 180;
+	a_tower[5].armor = 15;
+	a_tower[5].blood = a_tower[5].full_blood = 2350;
+	a_tower[5].party = SCOURGE;
+	a_tower[5].direction = 45;
+
+	a_tower[6].size = 10;
+	a_tower[6].pos.x = 436;
+	a_tower[6].pos.y = -586;
+	a_tower[6].pos.z = a_tower[6].size/2;
+	a_tower[6].damage = 140;
+	a_tower[6].armor = 2;
+	a_tower[6].blood = a_tower[6].full_blood = 1450;
+	a_tower[6].party = SCOURGE;
+	a_tower[6].direction = 0;
+
+	a_tower[7].size = 12;
+	a_tower[7].pos.x = 54;
+	a_tower[7].pos.y = -664;
+	a_tower[7].pos.z = a_tower[7].size/2;
+	a_tower[7].damage = 180;
+	a_tower[7].armor = 5;
+	a_tower[7].blood = a_tower[7].full_blood = 1850;
+	a_tower[7].party = SCOURGE;
+	a_tower[7].direction = 0;
+
+	a_tower[8].size = 14;
+	a_tower[8].pos.x = -334;
+	a_tower[8].pos.y = -656;
+	a_tower[8].pos.z = a_tower[8].size/2;
+	a_tower[8].damage = 180;
+	a_tower[8].armor = 15;
+	a_tower[8].blood = a_tower[8].full_blood = 2350;
+	a_tower[8].party = SCOURGE;
+	a_tower[8].direction = 0;
+
+	a_tower[9].size = 18;
+	a_tower[9].pos.x = -616;
+	a_tower[9].pos.y = -624;
+	a_tower[9].pos.z = a_tower[9].size/2;
+	a_tower[9].damage = 300;
+	a_tower[9].armor = 30;
+	a_tower[9].blood = a_tower[9].full_blood = 4750;
+	a_tower[9].party = SCOURGE;
+	a_tower[9].direction = 45;
+
+	e_tower[0].size = 10;
+	e_tower[0].pos.x = -414;
+	e_tower[0].pos.y = 448;
+	e_tower[0].pos.z = e_tower[0].size/2;
+	e_tower[0].damage = 140;
+	e_tower[0].armor = 2;
+	e_tower[0].blood = e_tower[0].full_blood = 1450;
+	e_tower[0].party = SCOURGE;
+	e_tower[0].direction = 180;
+
+	e_tower[1].size = 12;
+	e_tower[1].pos.x = -85;
+	e_tower[1].pos.y = 520;
+	e_tower[1].pos.z = e_tower[1].size/2;
+	e_tower[1].damage = 180;
+	e_tower[1].armor = 5;
+	e_tower[1].blood = e_tower[1].full_blood = 1850;
+	e_tower[1].party = SCOURGE;
+	e_tower[1].direction = 180;
+
+	e_tower[2].size = 14;
+	e_tower[2].pos.x = 242;
+	e_tower[2].pos.y = 578;
+	e_tower[2].pos.z = e_tower[2].size/2;
+	e_tower[2].damage = 180;
+	e_tower[2].armor = 15;
+	e_tower[2].blood = e_tower[2].full_blood = 2350;
+	e_tower[2].party = SCOURGE;
+	e_tower[2].direction = 180;
+
+	e_tower[3].size = 10;
+	e_tower[3].pos.x = 42;
+	e_tower[3].pos.y = 58;
+	e_tower[3].pos.z = e_tower[3].size/2;
+	e_tower[3].damage = 140;
+	e_tower[3].armor = 2;
+	e_tower[3].blood = e_tower[3].full_blood = 1450;
+	e_tower[3].party = SCOURGE;
+	e_tower[3].direction = 225;
+
+	e_tower[4].size = 12;
+	e_tower[4].pos.x = 218;
+	e_tower[4].pos.y = 186;
+	e_tower[4].pos.z = e_tower[4].size/2;
+	e_tower[4].damage = 180;
+	e_tower[4].armor = 5;
+	e_tower[4].blood = e_tower[4].full_blood = 1850;
+	e_tower[4].party = SCOURGE;
+	e_tower[4].direction = 225;
+
+	e_tower[5].size = 14;
+	e_tower[5].pos.x = 412;
+	e_tower[5].pos.y = 416;
+	e_tower[5].pos.z = e_tower[5].size/2;
+	e_tower[5].damage = 180;
+	e_tower[5].armor = 15;
+	e_tower[5].blood = e_tower[5].full_blood = 2350;
+	e_tower[5].party = SCOURGE;
+	e_tower[5].direction = 225;
+
+	e_tower[6].size = 10;
+	e_tower[6].pos.x = 592;
+	e_tower[6].pos.y = -358;
+	e_tower[6].pos.z = e_tower[6].size/2;
+	e_tower[6].damage = 140;
+	e_tower[6].armor = 2;
+	e_tower[6].blood = e_tower[6].full_blood = 1450;
+	e_tower[6].party = SCOURGE;
+	e_tower[6].direction = 270;
+
+	e_tower[7].size = 12;
+	e_tower[7].pos.x = 586;
+	e_tower[7].pos.y = -52;
+	e_tower[7].pos.z = e_tower[7].size/2;
+	e_tower[7].damage = 180;
+	e_tower[7].armor = 5;
+	e_tower[7].blood = e_tower[7].full_blood = 1850;
+	e_tower[7].party = SCOURGE;
+	e_tower[7].direction = 270;
+
+	e_tower[8].size = 14;
+	e_tower[8].pos.x = 598;
+	e_tower[8].pos.y = 276;
+	e_tower[8].pos.z = e_tower[8].size/2;
+	e_tower[8].damage = 180;
+	e_tower[8].armor = 15;
+	e_tower[8].blood = e_tower[8].full_blood = 2350;
+	e_tower[8].party = SCOURGE;
+	e_tower[8].direction = 270;
+
+	e_tower[9].size = 18;
+	e_tower[9].pos.x = 666;
+	e_tower[9].pos.y = 643;
+	e_tower[9].pos.z = e_tower[9].size/2;
+	e_tower[9].damage = 300;
+	e_tower[9].armor = 30;
+	e_tower[9].blood = e_tower[9].full_blood = 4750;
+	e_tower[9].party = SCOURGE;
+	e_tower[9].direction = 225;
 }
