@@ -51,8 +51,8 @@ void init_level()
 
 void init_bullet_head()
 {
-	bullet_head = malloc(sizeof(struct bullet));
-	bullet_tail = malloc(sizeof(struct bullet));
+	bullet_head = bb_malloc(sizeof(struct bullet));
+	bullet_tail = bb_malloc(sizeof(struct bullet));
 	bullet_head->owner_bottle = -1;
 	bullet_tail->owner_bottle = -1;
 	bullet_head->owner_tower = -1;
@@ -105,10 +105,10 @@ void light_init()
 void init_soldier_heads()
 {
 	soldier_count = 0;
-	a_head = malloc(sizeof(struct soldier));
-	a_tail = malloc(sizeof(struct soldier));
-	e_head = malloc(sizeof(struct soldier));
-	e_tail = malloc(sizeof(struct soldier));
+	a_head = bb_malloc(sizeof(struct soldier));
+	a_tail = bb_malloc(sizeof(struct soldier));
+	e_head = bb_malloc(sizeof(struct soldier));
+	e_tail = bb_malloc(sizeof(struct soldier));
 	a_head->party = -1;
 	a_tail->party = -1;
 	e_head->party = -1;
@@ -130,10 +130,10 @@ void init_camera()
 void init_creatures()
 {
 	int i,j;
-	my = malloc(sizeof(struct hero));
+	my = bb_malloc(sizeof(struct hero));
 	my->level = 1;
-	my->pos.x = -700;
-	my->pos.y = -500;
+	my->pos.x = -0;
+	my->pos.y = -0;
 	my->pos.z = 5;
 	my->direction.x = my->direction.y = my->direction.z = 0;
 	my->speed = 0;
@@ -156,9 +156,14 @@ void init_creatures()
 	for (i = 0; i < 5; ++i) {
 		my->spell[i] = -1;
 	}
-	for (i = 0; i < 8; ++i) {
-		my->item[i] = -1;
-	}
+	my->item[0] = 32 - 11;
+	my->item[1] = 61 - 11;
+	my->item[2] = 58 - 11;
+	my->item[3] = 41 - 11;
+	my->item[4] = 72 - 11;
+	my->item[5] = 36 - 11;
+	my->item[6] = 80 - 11;
+	my->item[7] = 59 - 11;
 	my->gold = 853;
 	my->kill = 0;
 	my->death = 0;
@@ -171,7 +176,7 @@ void init_creatures()
 	my->bullet_counter = 0;
 
 	for (j = 0; j < 9; ++j) {
-		ally[j] = malloc(sizeof(struct hero));
+		ally[j] = bb_malloc(sizeof(struct hero));
 		ally[j]->level = 1;
 		ally[j]->pos.x = -700 + 20*(j+1);
 		ally[j]->pos.y = -500 - 20*(j+1);
@@ -212,7 +217,7 @@ void init_creatures()
 	}
 
 	for (j = 0; j < 10; ++j) {
-		enemy[j] = malloc(sizeof(struct hero));
+		enemy[j] = bb_malloc(sizeof(struct hero));
 		enemy[j]->level = 1;
 		enemy[j]->pos.x = 700 - 20*j;
 		enemy[j]->pos.y = 500 + 20*j;
@@ -268,7 +273,7 @@ void load_blank()
 	FILE *fp = NULL;
 	int i,j;
 	int R,G,B,A;
-	blank = malloc(sizeof(char) * 64 * 64 * 4);
+	blank = bb_malloc(sizeof(char) * 64 * 64 * 4);
 
 	fp = fopen("./data/blank","rw+");
 	for (j = 0; j < 64; ++j) {
@@ -292,11 +297,11 @@ void load_num()
 	int i,j,k;
 	int R,G,B,A;
 	char *path;
-	path = malloc(sizeof(char)*13);
+	path = bb_malloc(sizeof(char)*13);
 	memcpy(path, "./data/num/", sizeof(char)*12);
 
 	for (k = 0; k < 10; ++k) {
-		num[k] = malloc(sizeof(char) * 50 * 50 * 4);
+		num[k] = bb_malloc(sizeof(char) * 50 * 50 * 4);
 		path[11] = (char) (i + 48);
 		path[12] = '\0';
 		fp = fopen(path, "rw+");
@@ -321,7 +326,7 @@ void load_map()
 	FILE *fp = NULL;
 	int i,j;
 	int R,G,B,A;
-	map = malloc(sizeof(char) * 1500 * 1500);
+	map = bb_malloc(sizeof(char) * 1500 * 1500);
 
 	fp = fopen("./data/map","rw+");
 	for (j = 0; j < 1500; ++j) {
@@ -339,7 +344,7 @@ void load_map()
 	}
 	fclose(fp);
 
-	map2 = malloc(sizeof(char) * 300 * 300);
+	map2 = bb_malloc(sizeof(char) * 300 * 300);
 
 	for (j = 0; j < 300; ++j) {
 		for (i = 0; i < 300; ++i) {
@@ -351,7 +356,7 @@ void load_map()
 		}
 	}
 
-	small_map = malloc(sizeof(char) * 360 * 360 * 4);
+	small_map = bb_malloc(sizeof(char) * 360 * 360 * 4);
 	fp = fopen("./data/map2","rw+");
 	for (j = 0; j < 360; ++j) {
 		for (i = 0; i < 360; ++i) {
@@ -373,7 +378,7 @@ void load_wood()
 	FILE *fp = NULL;
 	int i,j;
 	int R,G,B,A;
-	wood = malloc(sizeof(char) * 400 * 1080 * 4);
+	wood = bb_malloc(sizeof(char) * 400 * 1080 * 4);
 
 	fp = fopen("./data/wood","rw+");
 	for (j = 0; j < 1080; ++j) {
@@ -396,7 +401,7 @@ void load_grass()
 	FILE *fp = NULL;
 	int i,j;
 	int R,G,B,A;
-	grass = malloc(sizeof(char) * 200 * 200 * 4);
+	grass = bb_malloc(sizeof(char) * 200 * 200 * 4);
 
 	fp = fopen("./data/grass","rw+");
 	for (j = 0; j < 200; ++j) {
@@ -420,12 +425,12 @@ void load_items()
 	int i,j,k;
 	int R,G,B,A;
 	char *path_head = "./data/item/";
-	char *path = malloc(sizeof(char) * 15);
+	char *path = bb_malloc(sizeof(char) * 15);
 	strcpy(path, path_head);
 
-	items = malloc(sizeof(char *) * 80);
+	items = bb_malloc(sizeof(char *) * 80);
 	for (k = 0; k < 80; ++k) {
-		items[k] = malloc(sizeof(char) * 64 * 64 * 4);
+		items[k] = bb_malloc(sizeof(char) * 64 * 64 * 4);
 	}
 	for (k = 11; k < 91; ++k) {
 		path[12] = (char) (k/10 + 48);
@@ -454,12 +459,12 @@ void load_spells()
 	int i,j,k;
 	int R,G,B,A;
 	char *path_head = "./data/spell/";
-	char *path = malloc(sizeof(char) * 16);
+	char *path = bb_malloc(sizeof(char) * 16);
 	strcpy(path, path_head);
 
-	spells = malloc(sizeof(char *) * 80);
+	spells = bb_malloc(sizeof(char *) * 80);
 	for (k = 0; k < 80; ++k) {
-		spells[k] = malloc(sizeof(char) * 64 * 64 * 4);
+		spells[k] = bb_malloc(sizeof(char) * 64 * 64 * 4);
 	}
 	for (k = 11; k < 91; ++k) {
 		path[13] = (char) (k/10 + 48);

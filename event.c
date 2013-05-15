@@ -9,6 +9,62 @@
 	
 void bb_keyboard(unsigned char key, int x, int y)
 {
+	if (key == '1') {
+		if (my->gold >= 1000) {
+			my->gold -= 1000;
+			++my->own_item[0];
+		}
+	}
+
+	if (key == '2') {
+		if (my->gold >= 1000) {
+			my->gold -= 1000;
+			++my->own_item[1];
+		}
+	}
+
+	if (key == '3') {
+		if (my->gold >= 1000) {
+			my->gold -= 1000;
+			++my->own_item[2];
+		}
+	}
+
+	if (key == '4') {
+		if (my->gold >= 1500) {
+			my->gold -= 1500;
+			++my->own_item[3];
+		}
+	}
+
+	if (key == '5') {
+		if (my->gold >= 1000) {
+			my->gold -= 1000;
+			++my->own_item[4];
+		}
+	}
+
+	if (key == '6') {
+		if (my->gold >= 6000) {
+			my->gold -= 6000;
+			++my->own_item[5];
+		}
+	}
+
+	if (key == '7') {
+		if (my->gold >= 100) {
+			my->gold -= 100;
+			my->blood = my->blood + 400 >= my->full_blood ? my->full_blood : my->blood + 400;
+		}
+	}
+
+	if (key == '8') {
+		if (my->gold >= 100) {
+			my->gold -= 100;
+			my->blood = my->mana + 150 >= my->full_mana ? my->full_mana : my->mana + 150;
+		}
+	}
+
 	if (key == 'w') {
 		camera_direction.y += GAIN;
 		if (camera_direction.y > 750) {

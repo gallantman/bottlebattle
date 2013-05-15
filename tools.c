@@ -163,3 +163,75 @@ float bb_abs(float val)
 
 	return -val;
 }
+
+int get_true_damage(int damage, int armor)
+{
+	float coeff = (float) 1 / (float) 15;
+	float ratio = (float) (1 - exp(-coeff*armor)) / (float) (1 + exp(-coeff*armor));
+	return (int) (1 - ratio)*damage;
+}
+
+int bullet_in_range(struct bullet *temp) {
+	float dist;
+
+	if (temp->party == SENTINEL) {
+		if (temp->target_tower != -1) {
+			int i = temp->target_tower;
+			dist = sqrt((temp->pos.x - e_tower[i].pos.x)*(temp->pos.x - e_tower[i].pos.x) +
+				(temp->pos.y - e_tower[i].pos.y)*(temp->pos.y - e_tower[i].pos.y));
+			if (dist <= 12) {
+				return 1;
+			} else {
+				return 0;
+			}
+		} else if (temp->target_bottle != -1) {
+			int i = temp->target_bottle;
+			dist = sqrt((temp->pos.x - enemy[i]->pos.x)*(temp->pos.x - enemy[i]->pos.x) +
+				(temp->pos.y - enemy[i]->pos.y)*(temp->pos.y - enemy[i]->pos.y));
+			if (dist <= 8) {
+				return 1;
+			} else {
+				return 0;
+			}
+		}
+	} else if (temp->party == SCOURGE) {
+		if (temp->target_tower != -1) {
+			int i = temp->target_tower;
+			dist = sqrt((temp->pos.x - a_tower[i].pos.x)*(temp->pos.x - a_tower[i].pos.x) +
+				(temp->pos.y - a_tower[i].pos.y)*(temp->pos.y - a_tower[i].pos.y));
+			if (dist <= 12) {
+				return 1;
+			} else {
+				return 0;
+			}
+		} else if (temp->target_bottle == 9) {
+			dist = sqrt((temp->pos.x - my->pos.x)*(temp->pos.x - my->pos.x) +
+				(temp->pos.y - my->pos.y)*(temp->pos.y - my->pos.y));
+			if (dist <= 8) {
+				return 1;
+			} else {
+				return 0;
+			}
+		} else {
+			int i = temp->target_bottle;
+			dist = sqrt((temp->pos.x - ally[i]->pos.x)*(temp->pos.x - ally[i]->pos.x) +
+				(temp->pos.y - ally[i]->pos.y)*(temp->pos.y - ally[i]->pos.y));
+			if (dist <= 8) {
+				return 1;
+			} else {
+				return 0;
+			}
+		}
+	}
+
+	return 0;
+}
+
+void *bb_malloc(int size) {
+	void *res = malloc(size);
+	if (!res) {
+		fprintf(stderr, "Error in malloc!\n");
+		return NULL;
+	}
+	return res;
+}

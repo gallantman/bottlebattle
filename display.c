@@ -20,7 +20,28 @@ void bb_display(int value)
 
 void test_exit()
 {
-	if (a_tower[9].blood <= 0 || e_tower[9].blood <= 0) {
+	int i;
+	int res = 0;
+
+	for (i = 0; i < 10; ++i) {
+		if (a_tower[i].blood <= 0) {
+			++res;
+		}
+	}
+
+	if (res == 10) {
+		exit(0);
+	}
+
+	res = 0;
+
+	for (i = 0; i < 10; ++i) {
+		if (e_tower[i].blood <= 0) {
+			++res;
+		}
+	}
+
+	if (res == 10) {
 		exit(0);
 	}
 }
@@ -257,7 +278,7 @@ void right_render_choose()
 		posx = 100*i + 18;
 		posy = 20;
 		glRasterPos2i(posx, posy);
-		if (my->item[i + 4]) {
+		if (my->item[i + 4] == -1) {
 			glDrawPixels(64, 64, GL_BGRA, GL_UNSIGNED_BYTE, blank);
 		} else {
 			glDrawPixels(64, 64, GL_BGRA, GL_UNSIGNED_BYTE, items[my->item[i + 4]]);
@@ -276,6 +297,54 @@ void refresh()
 	hit_system();
 	adjust_bottle_target();
 	adjust_bottle_angle();
+	adjust_tower_angle();
+	refresh_bottle_status();
+}
+
+void refresh_bottle_status()
+{
+	int i;
+	int hurt;
+
+	for (i = 0; i < 9; ++i) {
+		hurt = ally[i]->full_blood - ally[i]->blood;
+		ally[i]->level = get_level_from_experience(ally[i]->experience);
+		ally[i]->agility = 26 + ally[i]->level*4;
+		ally[i]->strength = 21 + ally[i]->level*4;
+		ally[i]->intelligence = 16 + ally[i]->level*4;
+		ally[i]->armor = 0.5*(3 + ally[i]->level);
+		ally[i]->damage = 25 + 10*ally[i]->level + 0.2*(ally[i]->agility + ally[i]->strength + ally[i]->intelligence);
+		ally[i]->full_blood = 200 + ally[i]->strength*19;
+		ally[i]->full_mana = ally[i]->mana = 150 + ally[i]->intelligence*13;
+		ally[i]->mana = ally[i]->full_mana;
+		ally[i]->blood = ally[i]->full_blood - hurt;
+	}
+
+	for (i = 0; i < 10; ++i) {
+		hurt = enemy[i]->full_blood - enemy[i]->blood;
+		enemy[i]->level = get_level_from_experience(enemy[i]->experience);
+		enemy[i]->agility = 26 + enemy[i]->level*4;
+		enemy[i]->strength = 21 + enemy[i]->level*4;
+		enemy[i]->intelligence = 16 + enemy[i]->level*4;
+		enemy[i]->armor = 0.5*(3 + enemy[i]->level);
+		enemy[i]->damage = 25 + 10*enemy[i]->level + 0.2*(enemy[i]->agility + enemy[i]->strength + enemy[i]->intelligence);
+		enemy[i]->full_blood = 200 + enemy[i]->strength*19;
+		enemy[i]->full_mana = enemy[i]->mana = 150 + enemy[i]->intelligence*13;
+		enemy[i]->mana = enemy[i]->full_mana;
+		enemy[i]->blood = enemy[i]->full_blood - hurt;
+	}
+
+	hurt = my->full_blood - my->blood;
+	my->level = get_level_from_experience(my->experience);
+	my->agility = 26 + my->level*4 + 10*my->own_item[0];
+	my->strength = 21 + my->level*4 + 10*my->own_item[1];
+	my->intelligence = 16 + my->level*4 + 10*my->own_item[2];
+	my->armor = 0.5*(3 + my->level) + 10*my->own_item[3];
+	my->damage = 25 + 10*my->level + 0.2*(my->agility + my->strength + my->intelligence) + 20*my->own_item[4] + 300*my->own_item[5];
+	my->full_blood = 200 + my->strength*19;
+	my->full_mana = my->mana = 150 + my->intelligence*13;
+	my->mana = my->full_mana;
+	my->blood = my->full_blood - hurt;
 }
 
 void generate_bullet()
@@ -289,7 +358,7 @@ void generate_bullet()
 		length = sqrt((enemy[tar]->pos.x - my->pos.x)*(enemy[tar]->pos.x - my->pos.x) + 
 			(enemy[tar]->pos.y - my->pos.y)*(enemy[tar]->pos.y - my->pos.y));
 		if (length <= SHOT && my->bullet_counter == 0) {
-			struct bullet *new_bullet = malloc(sizeof(struct bullet));
+			struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
 			vecx = enemy[tar]->pos.x - my->pos.x;
 			vecy = enemy[tar]->pos.y - my->pos.y;
 			ratiox = vecx / length;
@@ -301,6 +370,7 @@ void generate_bullet()
 			new_bullet->direction.x = ratiox * BOTTLE_SPEED;
 			new_bullet->direction.y = ratioy * BOTTLE_SPEED;
 			new_bullet->damage = my->damage;
+			new_bullet->counter = 0;
 			new_bullet->party = SENTINEL;
 			new_bullet->owner_tower = -1;
 			new_bullet->owner_bottle = 9;
@@ -319,7 +389,7 @@ void generate_bullet()
 		length = sqrt((e_tower[tar].pos.x - my->pos.x)*(e_tower[tar].pos.x - my->pos.x) + 
 			(e_tower[tar].pos.y - my->pos.y)*(e_tower[tar].pos.y - my->pos.y));
 		if (length <= SHOT && my->bullet_counter == 0) {
-			struct bullet *new_bullet = malloc(sizeof(struct bullet));
+			struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
 			vecx = e_tower[tar].pos.x - my->pos.x;
 			vecy = e_tower[tar].pos.y - my->pos.y;
 			ratiox = vecx / length;
@@ -331,6 +401,7 @@ void generate_bullet()
 			new_bullet->direction.x = ratiox * BOTTLE_SPEED;
 			new_bullet->direction.y = ratioy * BOTTLE_SPEED;
 			new_bullet->damage = my->damage;
+			new_bullet->counter = 0;
 			new_bullet->party = SENTINEL;
 			new_bullet->owner_tower = -1;
 			new_bullet->owner_bottle = 9;
@@ -351,7 +422,7 @@ void generate_bullet()
 			length = sqrt((enemy[tar]->pos.x - ally[i]->pos.x)*(enemy[tar]->pos.x - ally[i]->pos.x) + 
 				(enemy[tar]->pos.y - ally[i]->pos.y)*(enemy[tar]->pos.y - ally[i]->pos.y));
 			if (length <= SHOT && ally[i]->bullet_counter == 0) {
-				struct bullet *new_bullet = malloc(sizeof(struct bullet));
+				struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
 				new_bullet->speed = BULLET_SPEED;
 				new_bullet->pos.x = ally[i]->pos.x + ally[i]->direction.x*8;
 				new_bullet->pos.y = ally[i]->pos.y + ally[i]->direction.y*8;
@@ -359,6 +430,7 @@ void generate_bullet()
 				new_bullet->direction.x = ally[i]->direction.x*BULLET_SPEED/BOTTLE_SPEED;
 				new_bullet->direction.y = ally[i]->direction.y*BULLET_SPEED/BOTTLE_SPEED;
 				new_bullet->damage = ally[i]->damage;
+				new_bullet->counter = 0;
 				new_bullet->party = SENTINEL;
 				new_bullet->owner_tower = -1;
 				new_bullet->owner_bottle = i;
@@ -375,7 +447,7 @@ void generate_bullet()
 			length = sqrt((e_tower[tar].pos.x - ally[i]->pos.x)*(e_tower[tar].pos.x - ally[i]->pos.x) + 
 				(e_tower[tar].pos.y - ally[i]->pos.y)*(e_tower[tar].pos.y - ally[i]->pos.y));
 			if (length <= SHOT && ally[i]->bullet_counter == 0) {
-				struct bullet *new_bullet = malloc(sizeof(struct bullet));
+				struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
 				new_bullet->speed = BULLET_SPEED;
 				new_bullet->pos.x = ally[i]->pos.x + ally[i]->direction.x*8;
 				new_bullet->pos.y = ally[i]->pos.y + ally[i]->direction.y*8;
@@ -383,6 +455,7 @@ void generate_bullet()
 				new_bullet->direction.x = ally[i]->direction.x*BULLET_SPEED/BOTTLE_SPEED;
 				new_bullet->direction.y = ally[i]->direction.y*BULLET_SPEED/BOTTLE_SPEED;
 				new_bullet->damage = ally[i]->damage;
+				new_bullet->counter = 0;
 				new_bullet->party = SENTINEL;
 				new_bullet->owner_tower = -1;
 				new_bullet->owner_bottle = i;
@@ -405,7 +478,7 @@ void generate_bullet()
 				length = sqrt((my->pos.x - enemy[i]->pos.x)*(my->pos.x - enemy[i]->pos.x) + 
 				(my->pos.y - enemy[i]->pos.y)*(my->pos.y - enemy[i]->pos.y));
 				if (length <= SHOT && enemy[i]->bullet_counter == 0) {
-					struct bullet *new_bullet = malloc(sizeof(struct bullet));
+					struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
 					new_bullet->speed = BULLET_SPEED;
 					new_bullet->pos.x = enemy[i]->pos.x + enemy[i]->direction.x*8;
 					new_bullet->pos.y = enemy[i]->pos.y + enemy[i]->direction.y*8;
@@ -413,6 +486,7 @@ void generate_bullet()
 					new_bullet->direction.x = enemy[i]->direction.x*BULLET_SPEED/BOTTLE_SPEED;
 					new_bullet->direction.y = enemy[i]->direction.y*BULLET_SPEED/BOTTLE_SPEED;
 					new_bullet->damage = enemy[i]->damage;
+					new_bullet->counter = 0;
 					new_bullet->party = SCOURGE;
 					new_bullet->owner_tower = -1;
 					new_bullet->owner_bottle = i;
@@ -428,7 +502,7 @@ void generate_bullet()
 				length = sqrt((ally[tar]->pos.x - enemy[i]->pos.x)*(ally[tar]->pos.x - enemy[i]->pos.x) + 
 				(ally[tar]->pos.y - enemy[i]->pos.y)*(ally[tar]->pos.y - enemy[i]->pos.y));
 				if (length <= SHOT && enemy[i]->bullet_counter == 0) {
-					struct bullet *new_bullet = malloc(sizeof(struct bullet));
+					struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
 					new_bullet->speed = BULLET_SPEED;
 					new_bullet->pos.x = enemy[i]->pos.x + enemy[i]->direction.x*8;
 					new_bullet->pos.y = enemy[i]->pos.y + enemy[i]->direction.y*8;
@@ -436,6 +510,7 @@ void generate_bullet()
 					new_bullet->direction.x = enemy[i]->direction.x*BULLET_SPEED/BOTTLE_SPEED;
 					new_bullet->direction.y = enemy[i]->direction.y*BULLET_SPEED/BOTTLE_SPEED;
 					new_bullet->damage = enemy[i]->damage;
+					new_bullet->counter = 0;
 					new_bullet->party = SCOURGE;
 					new_bullet->owner_tower = -1;
 					new_bullet->owner_bottle = i;
@@ -453,7 +528,7 @@ void generate_bullet()
 			length = sqrt((a_tower[tar].pos.x - enemy[i]->pos.x)*(a_tower[tar].pos.x - enemy[i]->pos.x) + 
 				(a_tower[tar].pos.y - enemy[i]->pos.y)*(a_tower[tar].pos.y - enemy[i]->pos.y));
 			if (length <= SHOT && enemy[i]->bullet_counter == 0) {
-				struct bullet *new_bullet = malloc(sizeof(struct bullet));
+				struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
 				new_bullet->speed = BULLET_SPEED;
 				new_bullet->pos.x = enemy[i]->pos.x + enemy[i]->direction.x*8;
 				new_bullet->pos.y = enemy[i]->pos.y + enemy[i]->direction.y*8;
@@ -461,6 +536,7 @@ void generate_bullet()
 				new_bullet->direction.x = enemy[i]->direction.x*BULLET_SPEED/BOTTLE_SPEED;
 				new_bullet->direction.y = enemy[i]->direction.y*BULLET_SPEED/BOTTLE_SPEED;
 				new_bullet->damage = enemy[i]->damage;
+				new_bullet->counter = 0;
 				new_bullet->party = SCOURGE;
 				new_bullet->owner_tower = -1;
 				new_bullet->owner_bottle = i;
@@ -477,12 +553,12 @@ void generate_bullet()
 
 	for (i = 0; i < 10; ++i) {
 		float length;
-		if (a_tower[i].target != -1) {
+		if (a_tower[i].target != -1 && a_tower[i].state == ATTACK_TOWER) {
 			int tar = a_tower[i].target;
 			length = sqrt((enemy[tar]->pos.x - a_tower[i].pos.x)*(enemy[tar]->pos.x - a_tower[i].pos.x) + 
 			(enemy[tar]->pos.y - a_tower[i].pos.y)*(enemy[tar]->pos.y - a_tower[i].pos.y));
 			if (length <= SHOT_TOWER && a_tower[i].bullet_counter == 0) {
-				struct bullet *new_bullet = malloc(sizeof(struct bullet));
+				struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
 				new_bullet->speed = BULLET_SPEED;
 				new_bullet->pos.x = a_tower[i].pos.x + a_tower[i].direction2.x*a_tower[i].size;
 				new_bullet->pos.y = a_tower[i].pos.y + a_tower[i].direction2.y*a_tower[i].size;
@@ -490,6 +566,7 @@ void generate_bullet()
 				new_bullet->direction.x = a_tower[i].direction2.x*BULLET_SPEED/BOTTLE_SPEED;
 				new_bullet->direction.y = a_tower[i].direction2.y*BULLET_SPEED/BOTTLE_SPEED;
 				new_bullet->damage = a_tower[i].damage;
+				new_bullet->counter = 0;
 				new_bullet->party = SENTINEL;
 				new_bullet->owner_tower = i;
 				new_bullet->owner_bottle = -1;
@@ -506,12 +583,12 @@ void generate_bullet()
 
 	for (i = 0; i < 10; ++i) {
 		float length;
-		if (e_tower[i].target != -1) {
+		if (e_tower[i].target != -1 && e_tower[i].state == ATTACK_TOWER) {
 			int tar = e_tower[i].target;
 			length = sqrt((ally[tar]->pos.x - e_tower[i].pos.x)*(ally[tar]->pos.x - e_tower[i].pos.x) + 
 			(ally[tar]->pos.y - e_tower[i].pos.y)*(ally[tar]->pos.y - e_tower[i].pos.y));
 			if (length <= SHOT_TOWER && e_tower[i].bullet_counter == 0) {
-				struct bullet *new_bullet = malloc(sizeof(struct bullet));
+				struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
 				new_bullet->speed = BULLET_SPEED;
 				new_bullet->pos.x = e_tower[i].pos.x + e_tower[i].direction2.x*e_tower[i].size;
 				new_bullet->pos.y = e_tower[i].pos.y + e_tower[i].direction2.y*e_tower[i].size;
@@ -519,6 +596,7 @@ void generate_bullet()
 				new_bullet->direction.x = e_tower[i].direction2.x*BULLET_SPEED/BOTTLE_SPEED;
 				new_bullet->direction.y = e_tower[i].direction2.y*BULLET_SPEED/BOTTLE_SPEED;
 				new_bullet->damage = e_tower[i].damage;
+				new_bullet->counter = 0;
 				new_bullet->party = SCOURGE;
 				new_bullet->owner_tower = i;
 				new_bullet->owner_bottle = -1;
@@ -558,6 +636,71 @@ void generate_bullet()
 	for (i = 0; i < 10; ++i) {
 		if (e_tower[i].bullet_counter > 0) {
 			--e_tower[i].bullet_counter;
+		}
+	}
+}
+
+void adjust_tower_angle()
+{
+	int i;
+	float atan_val;
+	float angle;
+	float length;
+	float vecx, vecy;
+
+	for (i = 0; i < 10; ++i) {
+		if (a_tower[i].blood <= 0 || a_tower[i].state == REST) {
+			continue;
+		} else {
+			int tar = a_tower[i].target;
+			length = sqrt((enemy[tar]->pos.x - a_tower[i].pos.x)*(enemy[tar]->pos.x - a_tower[i].pos.x) + 
+					(enemy[tar]->pos.y - a_tower[i].pos.y)*(enemy[tar]->pos.y - a_tower[i].pos.y));
+			vecx = enemy[tar]->pos.x - a_tower[i].pos.x;
+			vecy = enemy[tar]->pos.y - a_tower[i].pos.y;
+			atan_val = atan((float) bb_abs(vecy) / (float) bb_abs(vecx));
+			angle = (atan_val / PI) * 180;
+			if (vecx > 0 && vecy >= 0) {
+				angle += 0;
+			} else if (vecx <=0 && vecy > 0) {
+				angle = 180 - angle;
+			} else if (vecx < 0 && vecy <= 0) {
+				angle += 180;
+			} else {
+				angle = -angle;
+			}
+			a_tower[i].direction = angle;
+			if (length > SHOT_TOWER) {
+				a_tower[i].state = REST;
+				a_tower[i].target = -1;
+			}
+		}
+	}
+
+	for (i = 0; i < 10; ++i) {
+		if (e_tower[i].blood <= 0 || e_tower[i].state == REST) {
+			continue;
+		} else {
+			int tar = e_tower[i].target;
+			length = sqrt((ally[tar]->pos.x - e_tower[i].pos.x)*(ally[tar]->pos.x - e_tower[i].pos.x) + 
+					(ally[tar]->pos.y - e_tower[i].pos.y)*(ally[tar]->pos.y - e_tower[i].pos.y));
+			vecx = ally[tar]->pos.x - e_tower[i].pos.x;
+			vecy = ally[tar]->pos.y - e_tower[i].pos.y;
+			atan_val = atan((float) bb_abs(vecy) / (float) bb_abs(vecx));
+			angle = (atan_val / PI) * 180;
+			if (vecx > 0 && vecy >= 0) {
+				angle += 0;
+			} else if (vecx <=0 && vecy > 0) {
+				angle = 180 - angle;
+			} else if (vecx < 0 && vecy <= 0) {
+				angle += 180;
+			} else {
+				angle = -angle;
+			}
+			e_tower[i].direction = angle;
+			if (length > SHOT_TOWER) {
+				e_tower[i].state = REST;
+				e_tower[i].target = -1;
+			}
 		}
 	}
 }
@@ -1044,7 +1187,341 @@ void refresh_bullet_positions()
 
 void hit_system()
 {
+	struct bullet *temp = bullet_head->next;
+	struct bullet *cache;
+	int true_damage;
 
+	while (temp != bullet_tail) {
+		++temp->counter;
+
+		if (temp->counter >= 30) {
+			temp->prev->next = temp->next;
+			temp->next->prev = temp->prev;
+			cache = temp;
+			temp = temp->next;
+			free(cache);
+			continue;
+		}
+
+		if (temp->party == SENTINEL) {
+			if (temp->owner_bottle != -1) {
+				if (temp->owner_bottle == 9) {
+					if (temp->target_bottle != -1) {
+						int i = temp->target_bottle;
+						if (bullet_in_range(temp)) {
+							true_damage = get_true_damage(temp->damage, enemy[i]->armor);
+							if (enemy[i]->blood - true_damage <= 0) {
+								enemy[i]->blood = enemy[i]->full_blood;
+								enemy[i]->target_bottle = -1;
+								enemy[i]->target_tower = -1;
+								enemy[i]->pos.x = 700 - 20*i;
+								enemy[i]->pos.y = 500 + 20*i;
+								enemy[i]->direction.x = 0;
+								enemy[i]->direction.y = 0;
+								enemy[i]->speed = 0;
+
+								my->experience += enemy[i]->level * 200;
+								my->gold += 350;
+								my->state = FOCUSED;
+								my->direction.x = 0;
+								my->direction.y = 0;
+								my->speed = 0;
+								my->target_tower = -1;
+								my->target_bottle = -1;
+							} else {
+								enemy[i]->blood -= true_damage;
+							}
+							temp->prev->next = temp->next;
+							temp->next->prev = temp->prev;
+							cache = temp;
+							temp = temp->next;
+							free(cache);
+							continue;
+						}
+					} else if (temp->target_tower != -1) {
+						int i = temp->target_tower;
+						if (bullet_in_range(temp)) {
+							true_damage = get_true_damage(temp->damage, e_tower[i].armor);
+							if (e_tower[i].blood - true_damage <= 0) {
+								e_tower[i].blood = 0;
+
+								my->experience += 500;
+								my->gold += 1000;
+								my->state = FOCUSED;
+								my->direction.x = 0;
+								my->direction.y = 0;
+								my->speed = 0;
+								my->target_tower = -1;
+								my->target_bottle = -1;
+							} else {
+								e_tower[i].blood -= true_damage;
+							}
+							if (e_tower[i].state == REST) {
+								e_tower[i].state = ATTACK_TOWER;
+								e_tower[i].target = 9;
+							}
+							temp->prev->next = temp->next;
+							temp->next->prev = temp->prev;
+							cache = temp;
+							temp = temp->next;
+							free(cache);
+							continue;
+						}
+					}
+				} else {
+					int j = temp->owner_bottle;
+					if (temp->target_bottle != -1) {
+						int i = temp->target_bottle;
+						if(bullet_in_range(temp)) {
+							true_damage = get_true_damage(temp->damage, enemy[i]->armor);
+							if (enemy[i]->blood - true_damage <= 0) {
+								enemy[i]->blood = enemy[i]->full_blood;
+								enemy[i]->target_bottle = -1;
+								enemy[i]->target_tower = -1;
+								enemy[i]->pos.x = 700 - 20*i;
+								enemy[i]->pos.y = 500 + 20*i;
+								enemy[i]->direction.x = 0;
+								enemy[i]->direction.y = 0;
+								enemy[i]->speed = 0;
+
+								ally[j]->experience += enemy[i]->level * 200;
+								ally[j]->gold += 350;
+								ally[j]->state = FOCUSED;
+								ally[j]->direction.x = 0;
+								ally[j]->direction.y = 0;
+								ally[j]->speed = 0;
+								ally[j]->target_tower = -1;
+								ally[j]->target_bottle = -1;
+							} else {
+								enemy[i]->blood -= true_damage;
+							}
+							temp->prev->next = temp->next;
+							temp->next->prev = temp->prev;
+							cache = temp;
+							temp = temp->next;
+							free(cache);
+							continue;
+						}
+					} else if (temp->target_tower != -1) {
+						int i = temp->target_tower;
+						if (bullet_in_range(temp)) {
+							true_damage = get_true_damage(temp->damage, e_tower[i].armor);
+							if (e_tower[i].blood - true_damage <= 0) {
+								e_tower[i].blood = 0;
+
+								ally[j]->experience += 500;
+								ally[j]->gold += 1000;
+								ally[j]->state = FOCUSED;
+								ally[j]->direction.x = 0;
+								ally[j]->direction.y = 0;
+								ally[j]->speed = 0;
+								ally[j]->target_tower = -1;
+								ally[j]->target_bottle = -1;
+							} else {
+								e_tower[i].blood -= true_damage;
+							}
+							if (e_tower[i].state == REST) {
+								e_tower[i].state = ATTACK_TOWER;
+								e_tower[i].target = j;
+							}
+							temp->prev->next = temp->next;
+							temp->next->prev = temp->prev;
+							cache = temp;
+							temp = temp->next;
+							free(cache);
+							continue;
+						}
+					}
+				}
+			} else if (temp->owner_tower != -1) {
+				int i = temp->target_bottle;
+				int j = temp->owner_tower;
+				if (bullet_in_range(temp)) {
+					true_damage = get_true_damage(temp->damage, enemy[i]->armor);
+					if (enemy[i]->blood - true_damage <= 0) {
+						enemy[i]->blood = enemy[i]->full_blood;
+						enemy[i]->target_bottle = -1;
+						enemy[i]->target_tower = -1;
+						enemy[i]->pos.x = 700 - 20*i;
+						enemy[i]->pos.y = 500 + 20*i;
+						enemy[i]->direction.x = 0;
+						enemy[i]->direction.y = 0;
+						enemy[i]->speed = 0;
+
+						a_tower[j].state = REST;
+						a_tower[j].target = -1;
+					} else {
+						enemy[i]->blood -= true_damage;
+					}
+					temp->prev->next = temp->next;
+					temp->next->prev = temp->prev;
+					cache = temp;
+					temp = temp->next;
+					free(cache);
+					continue;
+				}
+			}
+		} else if (temp->party == SCOURGE) {
+			if (temp->owner_bottle != -1) {
+				if (temp->target_bottle != -1) {
+					if (temp->target_bottle == 9) {
+						if (bullet_in_range(temp)) {
+							int j = temp->owner_bottle;
+							true_damage = get_true_damage(temp->damage, my->armor);
+							if (my->blood - true_damage <= 0) {
+								my->blood = my->full_blood;
+								my->target_bottle = -1;
+								my->target_tower = -1;
+								my->pos.x = -700;
+								my->pos.y = -500;
+								my->direction.x = 0;
+								my->direction.y = 0;
+								my->speed = 0;
+
+								enemy[j]->experience += my->level * 200;
+								enemy[j]->gold += 350;
+								enemy[j]->state = FOCUSED;
+								enemy[j]->direction.x = 0;
+								enemy[j]->direction.y = 0;
+								enemy[j]->speed = 0;
+								enemy[j]->target_tower = -1;
+								enemy[j]->target_bottle = -1;
+							} else {
+								my->blood -= true_damage;
+							}
+							temp->prev->next = temp->next;
+							temp->next->prev = temp->prev;
+							cache = temp;
+							temp = temp->next;
+							free(cache);
+							continue;
+						}
+					} else {
+						if(bullet_in_range(temp)) {
+							int j = temp->owner_bottle;
+							int i = temp->target_bottle;
+							true_damage = get_true_damage(temp->damage, ally[i]->armor);
+							if (ally[i]->blood - true_damage <= 0) {
+								ally[i]->blood = ally[i]->full_blood;
+								ally[i]->target_bottle = -1;
+								ally[i]->target_tower = -1;
+								ally[i]->pos.x = -700 + 20*(i+1);
+								ally[i]->pos.y = -500 - 20*(i+1);
+								ally[i]->direction.x = 0;
+								ally[i]->direction.y = 0;
+								ally[i]->speed = 0;
+
+								enemy[j]->experience += ally[i]->level * 200;
+								enemy[j]->gold += 350;
+								enemy[j]->state = FOCUSED;
+								enemy[j]->direction.x = 0;
+								enemy[j]->direction.y = 0;
+								enemy[j]->speed = 0;
+								enemy[j]->target_tower = -1;
+								enemy[j]->target_bottle = -1;
+							} else {
+								ally[i]->blood -= true_damage;
+							}
+							temp->prev->next = temp->next;
+							temp->next->prev = temp->prev;
+							cache = temp;
+							temp = temp->next;
+							free(cache);
+							continue;
+						}
+					}
+				} else if (temp->target_tower != -1) {
+					if (bullet_in_range(temp)) {
+						int j = temp->owner_bottle;
+						int i = temp->target_tower;
+						true_damage = get_true_damage(temp->damage, a_tower[i].armor);
+						if (a_tower[i].blood - true_damage <= 0) {
+							a_tower[i].blood = 0;
+
+							enemy[j]->experience += 500;
+							enemy[j]->gold += 1000;
+							enemy[j]->state = FOCUSED;
+							enemy[j]->direction.x = 0;
+							enemy[j]->direction.y = 0;
+							enemy[j]->speed = 0;
+							enemy[j]->target_tower = -1;
+							enemy[j]->target_bottle = -1;
+						} else {
+							a_tower[i].blood -= true_damage;
+						}
+						if (a_tower[i].state == REST) {
+							a_tower[i].state = ATTACK_TOWER;
+							a_tower[i].target = j;
+						}
+						temp->prev->next = temp->next;
+						temp->next->prev = temp->prev;
+						cache = temp;
+						temp = temp->next;
+						free(cache);
+						continue;
+					}
+				}
+			} else if (temp->owner_tower != -1) {
+				if (temp->target_bottle == 9) {
+					if (bullet_in_range(temp)) {
+						int j = temp->owner_tower;
+						true_damage = get_true_damage(temp->damage, my->armor);
+						if (my->blood - true_damage <= 0) {
+							my->blood = my->full_blood;
+							my->target_bottle = -1;
+							my->target_tower = -1;
+							my->pos.x = -700;
+							my->pos.y = -500;
+							my->gold = (my->gold - 300 >= 0) ? my->gold - 300 : 0;
+							my->direction.x = 0;
+							my->direction.y = 0;
+							my->speed = 0;
+
+							e_tower[j].state = REST;
+							e_tower[j].target = -1;
+						} else {
+							my->blood -= true_damage;
+						}
+						temp->prev->next = temp->next;
+						temp->next->prev = temp->prev;
+						cache = temp;
+						temp = temp->next;
+						free(cache);
+						continue;
+					}
+				} else if (temp->target_bottle > 0) {
+					if (bullet_in_range(temp)) {
+						int j = temp->owner_tower;
+						int i = temp->target_bottle;
+						true_damage = get_true_damage(temp->damage, ally[i]->armor);
+						if (ally[i]->blood - true_damage <= 0) {
+							ally[i]->blood = ally[i]->full_blood;
+							ally[i]->target_bottle = -1;
+							ally[i]->target_tower = -1;
+							ally[i]->pos.x = -700 + 20*(i+1);
+							ally[i]->pos.y = -500 - 20*(i+1);
+							ally[i]->gold = (my->gold - 300 >= 0) ? ally[i]->gold - 300 : 0;
+							ally[i]->direction.x = 0;
+							ally[i]->direction.y = 0;
+							ally[i]->speed = 0;
+
+							e_tower[j].state = REST;
+							e_tower[j].target = -1;
+						} else {
+							ally[i]->blood -= true_damage;
+						}
+						temp->prev->next = temp->next;
+						temp->next->prev = temp->prev;
+						cache = temp;
+						temp = temp->next;
+						free(cache);
+						continue;
+					}
+				}
+			}
+		}
+		temp = temp->next;
+	}
 }
 
 void refresh_border()

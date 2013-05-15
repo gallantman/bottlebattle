@@ -144,6 +144,7 @@ struct bullet {
 	int target_tower;
 	int target_bottle;
 	int party;
+	int counter;
 	struct bullet *prev;
 	struct bullet *next;
 };
@@ -151,6 +152,11 @@ struct bullet {
 struct bullet *bullet_head;
 struct bullet *bullet_tail;
 
+void *bb_malloc(int size);
+void adjust_tower_angle(void);
+void refresh_bottle_status(void);
+int bullet_in_range(struct bullet *temp);
+int get_true_damage(int damage, int armor);
 void generate_bullet(void);
 int click_ground(int mapx, int mapy);
 int click_enemy_bottle(int mapx, int mapy);
