@@ -140,19 +140,37 @@ void bb_mouse_left(int button, int press_state, int x, int y)
 				my->speed = BOTTLE_SPEED;
 				my->direction.x = my->speed*ratiox;
 				my->direction.y = my->speed*ratioy;
+				adjust_bottle_angle();
 				my->state = FOCUSED;
 				my_dstx = mapx;
 				my_dsty = mapy;
+				my->target_tower = my->target_bottle = -1;
 			} else {
 				id = click_enemy_bottle(mapx, mapy);
 				if (id != -1) {
+					float val = sqrt((mapx - my->pos.x)*(mapx - my->pos.x) + (mapy - my->pos.y)*(mapy - my->pos.y));
+					float ratiox = (float) (mapx - my->pos.x) / val;
+					float ratioy = (float) (mapy - my->pos.y) / val;
+					my->speed = BOTTLE_SPEED;
+					my->direction.x = my->speed*ratiox;
+					my->direction.y = my->speed*ratioy;
 					my->state = ATTACK;
+					adjust_bottle_angle();
+					my->target_tower = -1;
 					my->target_bottle = id;
 					return;
 				}
 				id = click_enemy_tower(mapx, mapy);
 				if (id != -1) {
+					float val = sqrt((mapx - my->pos.x)*(mapx - my->pos.x) + (mapy - my->pos.y)*(mapy - my->pos.y));
+					float ratiox = (float) (mapx - my->pos.x) / val;
+					float ratioy = (float) (mapy - my->pos.y) / val;
+					my->speed = BOTTLE_SPEED;
+					my->direction.x = my->speed*ratiox;
+					my->direction.y = my->speed*ratioy;
 					my->state = ATTACK;
+					adjust_bottle_angle();
+					my->target_bottle = -1;
 					my->target_tower = id;
 					return;
 				}

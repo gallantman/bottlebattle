@@ -53,8 +53,10 @@ void init_bullet_head()
 {
 	bullet_head = malloc(sizeof(struct bullet));
 	bullet_tail = malloc(sizeof(struct bullet));
-	bullet_head->owner = -1;
-	bullet_tail->owner = -1;
+	bullet_head->owner_bottle = -1;
+	bullet_tail->owner_bottle = -1;
+	bullet_head->owner_tower = -1;
+	bullet_tail->owner_tower = -1;
 	bullet_head->next = bullet_tail;
 	bullet_head->prev = NULL;
 	bullet_tail->prev = bullet_head;
@@ -157,8 +159,16 @@ void init_creatures()
 	for (i = 0; i < 8; ++i) {
 		my->item[i] = -1;
 	}
+	my->gold = 853;
+	my->kill = 0;
+	my->death = 0;
+	my->angle = 0.0;
+	for (i = 0; i < 8; ++i) {
+		my->own_item[i] = 0;
+	}
 	my->experience = 0;
 	my->dummy_counter = 0;
+	my->bullet_counter = 0;
 
 	for (j = 0; j < 9; ++j) {
 		ally[j] = malloc(sizeof(struct hero));
@@ -191,6 +201,14 @@ void init_creatures()
 		ally[j]->target_bottle = -1;
 		ally[j]->target_tower = -1;
 		ally[j]->dummy_counter = 0;
+		ally[j]->gold = 853;
+		ally[j]->kill = 0;
+		ally[j]->death = 0;
+		ally[j]->angle = 0.0;
+		for (i = 0; i < 8; ++i) {
+			ally[j]->own_item[i] = 0;
+		}
+		ally[j]->bullet_counter = 0;
 	}
 
 	for (j = 0; j < 10; ++j) {
@@ -224,6 +242,14 @@ void init_creatures()
 		enemy[j]->target_tower = -1;
 		enemy[j]->target_bottle = -1;
 		enemy[j]->dummy_counter = 0;
+		enemy[j]->gold = 853;
+		enemy[j]->kill = 0;
+		enemy[j]->death = 0;
+		enemy[j]->angle = 0.0;
+		for (i = 0; i < 8; ++i) {
+			enemy[j]->own_item[i] = 0;
+		}
+		enemy[j]->bullet_counter = 0;
 	}
 }
 
@@ -466,6 +492,8 @@ void get_screen_size()
 
 void init_tower()
 {
+	int i;
+
 	a_tower[0].size = 10;
 	a_tower[0].pos.x = -580;
 	a_tower[0].pos.y = 334;
@@ -475,6 +503,9 @@ void init_tower()
 	a_tower[0].blood = a_tower[0].full_blood = 1450;
 	a_tower[0].party = SCOURGE;
 	a_tower[0].direction = 90;
+	a_tower[0].state = REST;
+	a_tower[0].target = -1;
+	a_tower[0].bullet_counter = 0;
 
 	a_tower[1].size = 12;
 	a_tower[1].pos.x = -586;
@@ -485,6 +516,9 @@ void init_tower()
 	a_tower[1].blood = a_tower[1].full_blood = 1850;
 	a_tower[1].party = SCOURGE;
 	a_tower[1].direction = 90;
+	a_tower[1].state = REST;
+	a_tower[1].target = -1;
+	a_tower[1].bullet_counter = 0;
 
 	a_tower[2].size = 14;
 	a_tower[2].pos.x = -572;
@@ -495,6 +529,9 @@ void init_tower()
 	a_tower[2].blood = a_tower[2].full_blood = 2350;
 	a_tower[2].party = SCOURGE;
 	a_tower[2].direction = 90;
+	a_tower[2].state = REST;
+	a_tower[2].target = -1;
+	a_tower[2].bullet_counter = 0;
 
 	a_tower[3].size = 10;
 	a_tower[3].pos.x = -70;
@@ -505,6 +542,9 @@ void init_tower()
 	a_tower[3].blood = a_tower[3].full_blood = 1450;
 	a_tower[3].party = SCOURGE;
 	a_tower[3].direction = 45;
+	a_tower[3].state = REST;
+	a_tower[3].target = -1;
+	a_tower[3].bullet_counter = 0;
 
 	a_tower[4].size = 12;
 	a_tower[4].pos.x = -218;
@@ -515,6 +555,9 @@ void init_tower()
 	a_tower[4].blood = a_tower[4].full_blood = 1850;
 	a_tower[4].party = SCOURGE;
 	a_tower[4].direction = 45;
+	a_tower[4].state = REST;
+	a_tower[4].target = -1;
+	a_tower[4].bullet_counter = 0;
 
 	a_tower[5].size = 14;
 	a_tower[5].pos.x = -394;
@@ -525,6 +568,9 @@ void init_tower()
 	a_tower[5].blood = a_tower[5].full_blood = 2350;
 	a_tower[5].party = SCOURGE;
 	a_tower[5].direction = 45;
+	a_tower[5].state = REST;
+	a_tower[5].target = -1;
+	a_tower[5].bullet_counter = 0;
 
 	a_tower[6].size = 10;
 	a_tower[6].pos.x = 436;
@@ -535,6 +581,9 @@ void init_tower()
 	a_tower[6].blood = a_tower[6].full_blood = 1450;
 	a_tower[6].party = SCOURGE;
 	a_tower[6].direction = 0;
+	a_tower[6].state = REST;
+	a_tower[6].target = -1;
+	a_tower[6].bullet_counter = 0;
 
 	a_tower[7].size = 12;
 	a_tower[7].pos.x = 54;
@@ -545,6 +594,9 @@ void init_tower()
 	a_tower[7].blood = a_tower[7].full_blood = 1850;
 	a_tower[7].party = SCOURGE;
 	a_tower[7].direction = 0;
+	a_tower[7].state = REST;
+	a_tower[7].target = -1;
+	a_tower[7].bullet_counter = 0;
 
 	a_tower[8].size = 14;
 	a_tower[8].pos.x = -334;
@@ -555,6 +607,9 @@ void init_tower()
 	a_tower[8].blood = a_tower[8].full_blood = 2350;
 	a_tower[8].party = SCOURGE;
 	a_tower[8].direction = 0;
+	a_tower[8].state = REST;
+	a_tower[8].target = -1;
+	a_tower[8].bullet_counter = 0;
 
 	a_tower[9].size = 18;
 	a_tower[9].pos.x = -616;
@@ -565,6 +620,9 @@ void init_tower()
 	a_tower[9].blood = a_tower[9].full_blood = 4750;
 	a_tower[9].party = SCOURGE;
 	a_tower[9].direction = 45;
+	a_tower[9].state = REST;
+	a_tower[9].target = -1;
+	a_tower[9].bullet_counter = 0;
 
 	e_tower[0].size = 10;
 	e_tower[0].pos.x = -414;
@@ -575,6 +633,9 @@ void init_tower()
 	e_tower[0].blood = e_tower[0].full_blood = 1450;
 	e_tower[0].party = SCOURGE;
 	e_tower[0].direction = 180;
+	e_tower[0].state = REST;
+	e_tower[0].target = -1;
+	e_tower[0].bullet_counter = 0;
 
 	e_tower[1].size = 12;
 	e_tower[1].pos.x = -85;
@@ -585,6 +646,9 @@ void init_tower()
 	e_tower[1].blood = e_tower[1].full_blood = 1850;
 	e_tower[1].party = SCOURGE;
 	e_tower[1].direction = 180;
+	e_tower[1].state = REST;
+	e_tower[1].target = -1;
+	e_tower[1].bullet_counter = 0;
 
 	e_tower[2].size = 14;
 	e_tower[2].pos.x = 242;
@@ -595,6 +659,9 @@ void init_tower()
 	e_tower[2].blood = e_tower[2].full_blood = 2350;
 	e_tower[2].party = SCOURGE;
 	e_tower[2].direction = 180;
+	e_tower[2].state = REST;
+	e_tower[2].target = -1;
+	e_tower[2].bullet_counter = 0;
 
 	e_tower[3].size = 10;
 	e_tower[3].pos.x = 42;
@@ -605,6 +672,9 @@ void init_tower()
 	e_tower[3].blood = e_tower[3].full_blood = 1450;
 	e_tower[3].party = SCOURGE;
 	e_tower[3].direction = 225;
+	e_tower[3].state = REST;
+	e_tower[3].target = -1;
+	e_tower[3].bullet_counter = 0;
 
 	e_tower[4].size = 12;
 	e_tower[4].pos.x = 218;
@@ -615,6 +685,9 @@ void init_tower()
 	e_tower[4].blood = e_tower[4].full_blood = 1850;
 	e_tower[4].party = SCOURGE;
 	e_tower[4].direction = 225;
+	e_tower[4].state = REST;
+	e_tower[4].target = -1;
+	e_tower[4].bullet_counter = 0;
 
 	e_tower[5].size = 14;
 	e_tower[5].pos.x = 412;
@@ -625,6 +698,9 @@ void init_tower()
 	e_tower[5].blood = e_tower[5].full_blood = 2350;
 	e_tower[5].party = SCOURGE;
 	e_tower[5].direction = 225;
+	e_tower[5].state = REST;
+	e_tower[5].target = -1;
+	e_tower[5].bullet_counter = 0;
 
 	e_tower[6].size = 10;
 	e_tower[6].pos.x = 592;
@@ -635,6 +711,9 @@ void init_tower()
 	e_tower[6].blood = e_tower[6].full_blood = 1450;
 	e_tower[6].party = SCOURGE;
 	e_tower[6].direction = 270;
+	e_tower[6].state = REST;
+	e_tower[6].target = -1;
+	e_tower[6].bullet_counter = 0;
 
 	e_tower[7].size = 12;
 	e_tower[7].pos.x = 586;
@@ -645,6 +724,9 @@ void init_tower()
 	e_tower[7].blood = e_tower[7].full_blood = 1850;
 	e_tower[7].party = SCOURGE;
 	e_tower[7].direction = 270;
+	e_tower[7].state = REST;
+	e_tower[7].target = -1;
+	e_tower[7].bullet_counter = 0;
 
 	e_tower[8].size = 14;
 	e_tower[8].pos.x = 598;
@@ -655,6 +737,9 @@ void init_tower()
 	e_tower[8].blood = e_tower[8].full_blood = 2350;
 	e_tower[8].party = SCOURGE;
 	e_tower[8].direction = 270;
+	e_tower[8].state = REST;
+	e_tower[8].target = -1;
+	e_tower[8].bullet_counter = 0;
 
 	e_tower[9].size = 18;
 	e_tower[9].pos.x = 666;
@@ -665,4 +750,16 @@ void init_tower()
 	e_tower[9].blood = e_tower[9].full_blood = 4750;
 	e_tower[9].party = SCOURGE;
 	e_tower[9].direction = 225;
+	e_tower[9].state = REST;
+	e_tower[9].target = -1;
+	e_tower[9].bullet_counter = 0;
+
+	for (i = 0; i < 10; ++i) {
+		a_tower[i].direction2.x = 0;
+		a_tower[i].direction2.y = 0;
+		a_tower[i].direction2.z = 0;
+		e_tower[i].direction2.x = 0;
+		e_tower[i].direction2.y = 0;
+		e_tower[i].direction2.z = 0;
+	}
 }

@@ -4,7 +4,7 @@
 #define GAIN 2
 
 #define BULLET_SPEED 6
-#define BOTTLE_SPEED 1
+#define BOTTLE_SPEED 2
 
 #define MY_BOTTLE 1
 #define ALLY_BOTTLE 2
@@ -95,8 +95,10 @@ struct hero {
 	int target_bottle;
 	int dummy_counter;
 	int kill;
+	int death;
 	int own_item[8];
 	float angle;
+	int bullet_counter;
 };
 
 struct soldier {
@@ -113,6 +115,9 @@ struct soldier {
 	struct soldier *next;
 };
 
+#define REST 1
+#define ATTACK_TOWER 2
+
 struct tower {
 	struct pos pos;
 	int damage;
@@ -122,8 +127,11 @@ struct tower {
 	int party;
 	float size;
 	int direction;
+	struct direction direction2;
+	int state;
 	struct color color;
 	int target;
+	int bullet_counter;
 };
 
 struct bullet {
@@ -131,9 +139,11 @@ struct bullet {
 	struct pos pos;
 	struct direction direction;
 	int damage;
-	int owner;
+	int owner_tower;
+	int owner_bottle;
 	int target_tower;
 	int target_bottle;
+	int party;
 	struct bullet *prev;
 	struct bullet *next;
 };
@@ -141,6 +151,7 @@ struct bullet {
 struct bullet *bullet_head;
 struct bullet *bullet_tail;
 
+void generate_bullet(void);
 int click_ground(int mapx, int mapy);
 int click_enemy_bottle(int mapx, int mapy);
 int click_enemy_tower(int mapx, int mapy);
@@ -216,6 +227,7 @@ float bb_abs(float val);
 #define SCOURGE 1
 
 #define SHOT 50
+#define SHOT_TOWER 90
 
 struct hero *my;
 struct hero *ally[9];

@@ -270,11 +270,296 @@ void right_render_choose()
 
 void refresh()
 {
+	generate_bullet();
 	refresh_border();
 	refresh_position();
 	hit_system();
 	adjust_bottle_target();
 	adjust_bottle_angle();
+}
+
+void generate_bullet()
+{
+	int i;
+
+	if (my->target_bottle != -1) {
+		int tar = my->target_bottle;
+		float length;
+		float vecx, vecy, ratiox, ratioy;
+		length = sqrt((enemy[tar]->pos.x - my->pos.x)*(enemy[tar]->pos.x - my->pos.x) + 
+			(enemy[tar]->pos.y - my->pos.y)*(enemy[tar]->pos.y - my->pos.y));
+		if (length <= SHOT && my->bullet_counter == 0) {
+			struct bullet *new_bullet = malloc(sizeof(struct bullet));
+			vecx = enemy[tar]->pos.x - my->pos.x;
+			vecy = enemy[tar]->pos.y - my->pos.y;
+			ratiox = vecx / length;
+			ratioy = vecy / length;
+			new_bullet->speed = BULLET_SPEED;
+			new_bullet->pos.x = my->pos.x + my->direction.x*8;
+			new_bullet->pos.y = my->pos.y + my->direction.y*8;
+			new_bullet->pos.z = my->pos.z + 8*0.25;
+			new_bullet->direction.x = ratiox * BOTTLE_SPEED;
+			new_bullet->direction.y = ratioy * BOTTLE_SPEED;
+			new_bullet->damage = my->damage;
+			new_bullet->party = SENTINEL;
+			new_bullet->owner_tower = -1;
+			new_bullet->owner_bottle = 9;
+			new_bullet->target_tower = -1;
+			new_bullet->target_bottle = tar;
+			new_bullet->prev = bullet_head;
+			new_bullet->next = bullet_head->next;
+			bullet_head->next = new_bullet;
+			bullet_head->next->prev = new_bullet; 
+			my->bullet_counter = (int) ((float) 60*20 / (float) my->agility);
+		}
+	} else if (my->target_tower != -1) {
+		int tar = my->target_tower;
+		float length;
+		float vecx, vecy, ratiox, ratioy;
+		length = sqrt((e_tower[tar].pos.x - my->pos.x)*(e_tower[tar].pos.x - my->pos.x) + 
+			(e_tower[tar].pos.y - my->pos.y)*(e_tower[tar].pos.y - my->pos.y));
+		if (length <= SHOT && my->bullet_counter == 0) {
+			struct bullet *new_bullet = malloc(sizeof(struct bullet));
+			vecx = e_tower[tar].pos.x - my->pos.x;
+			vecy = e_tower[tar].pos.y - my->pos.y;
+			ratiox = vecx / length;
+			ratioy = vecy / length;
+			new_bullet->speed = BULLET_SPEED;
+			new_bullet->pos.x = my->pos.x + my->direction.x*8;
+			new_bullet->pos.y = my->pos.y + my->direction.y*8;
+			new_bullet->pos.z = my->pos.z + 8*0.25;
+			new_bullet->direction.x = ratiox * BOTTLE_SPEED;
+			new_bullet->direction.y = ratioy * BOTTLE_SPEED;
+			new_bullet->damage = my->damage;
+			new_bullet->party = SENTINEL;
+			new_bullet->owner_tower = -1;
+			new_bullet->owner_bottle = 9;
+			new_bullet->target_tower = tar;
+			new_bullet->target_bottle = -1;
+			new_bullet->prev = bullet_head;
+			new_bullet->next = bullet_head->next;
+			bullet_head->next = new_bullet;
+			bullet_head->next->prev = new_bullet;
+			my->bullet_counter = (int) ((float) 60*20 / (float) my->agility);
+		}
+	}
+
+	for (i = 0; i < 9; ++i) {
+		float length;
+		if (ally[i]->target_bottle != -1) {
+			int tar = ally[i]->target_bottle;
+			length = sqrt((enemy[tar]->pos.x - ally[i]->pos.x)*(enemy[tar]->pos.x - ally[i]->pos.x) + 
+				(enemy[tar]->pos.y - ally[i]->pos.y)*(enemy[tar]->pos.y - ally[i]->pos.y));
+			if (length <= SHOT && ally[i]->bullet_counter == 0) {
+				struct bullet *new_bullet = malloc(sizeof(struct bullet));
+				new_bullet->speed = BULLET_SPEED;
+				new_bullet->pos.x = ally[i]->pos.x + ally[i]->direction.x*8;
+				new_bullet->pos.y = ally[i]->pos.y + ally[i]->direction.y*8;
+				new_bullet->pos.z = ally[i]->pos.z + 8*0.25;
+				new_bullet->direction.x = ally[i]->direction.x*BULLET_SPEED/BOTTLE_SPEED;
+				new_bullet->direction.y = ally[i]->direction.y*BULLET_SPEED/BOTTLE_SPEED;
+				new_bullet->damage = ally[i]->damage;
+				new_bullet->party = SENTINEL;
+				new_bullet->owner_tower = -1;
+				new_bullet->owner_bottle = i;
+				new_bullet->target_tower = -1;
+				new_bullet->target_bottle = tar;
+				new_bullet->prev = bullet_head;
+				new_bullet->next = bullet_head->next;
+				bullet_head->next = new_bullet;
+				bullet_head->next->prev = new_bullet;
+				ally[i]->bullet_counter = (int) ((float) 60*20 / (float) ally[i]->agility); 
+			}
+		} else if (ally[i]->target_tower != -1) {
+			int tar = ally[i]->target_tower;
+			length = sqrt((e_tower[tar].pos.x - ally[i]->pos.x)*(e_tower[tar].pos.x - ally[i]->pos.x) + 
+				(e_tower[tar].pos.y - ally[i]->pos.y)*(e_tower[tar].pos.y - ally[i]->pos.y));
+			if (length <= SHOT && ally[i]->bullet_counter == 0) {
+				struct bullet *new_bullet = malloc(sizeof(struct bullet));
+				new_bullet->speed = BULLET_SPEED;
+				new_bullet->pos.x = ally[i]->pos.x + ally[i]->direction.x*8;
+				new_bullet->pos.y = ally[i]->pos.y + ally[i]->direction.y*8;
+				new_bullet->pos.z = ally[i]->pos.z + 8*0.25;
+				new_bullet->direction.x = ally[i]->direction.x*BULLET_SPEED/BOTTLE_SPEED;
+				new_bullet->direction.y = ally[i]->direction.y*BULLET_SPEED/BOTTLE_SPEED;
+				new_bullet->damage = ally[i]->damage;
+				new_bullet->party = SENTINEL;
+				new_bullet->owner_tower = -1;
+				new_bullet->owner_bottle = i;
+				new_bullet->target_tower = tar;
+				new_bullet->target_bottle = -1;
+				new_bullet->prev = bullet_head;
+				new_bullet->next = bullet_head->next;
+				bullet_head->next = new_bullet;
+				bullet_head->next->prev = new_bullet;
+				ally[i]->bullet_counter = (int) ((float) 60*20 / (float) ally[i]->agility);
+			}
+		}
+	}
+
+	for (i = 0; i < 10; ++i) {
+		float length;
+		if (enemy[i]->target_bottle != -1) {
+			int tar = enemy[i]->target_bottle;
+			if (tar == 9) {
+				length = sqrt((my->pos.x - enemy[i]->pos.x)*(my->pos.x - enemy[i]->pos.x) + 
+				(my->pos.y - enemy[i]->pos.y)*(my->pos.y - enemy[i]->pos.y));
+				if (length <= SHOT && enemy[i]->bullet_counter == 0) {
+					struct bullet *new_bullet = malloc(sizeof(struct bullet));
+					new_bullet->speed = BULLET_SPEED;
+					new_bullet->pos.x = enemy[i]->pos.x + enemy[i]->direction.x*8;
+					new_bullet->pos.y = enemy[i]->pos.y + enemy[i]->direction.y*8;
+					new_bullet->pos.z = enemy[i]->pos.z + 8*0.25;
+					new_bullet->direction.x = enemy[i]->direction.x*BULLET_SPEED/BOTTLE_SPEED;
+					new_bullet->direction.y = enemy[i]->direction.y*BULLET_SPEED/BOTTLE_SPEED;
+					new_bullet->damage = enemy[i]->damage;
+					new_bullet->party = SCOURGE;
+					new_bullet->owner_tower = -1;
+					new_bullet->owner_bottle = i;
+					new_bullet->target_tower = -1;
+					new_bullet->target_bottle = 9;
+					new_bullet->prev = bullet_head;
+					new_bullet->next = bullet_head->next;
+					bullet_head->next = new_bullet;
+					bullet_head->next->prev = new_bullet;
+					enemy[i]->bullet_counter = (int) ((float) 60*20 / (float) enemy[i]->agility);
+				}
+			} else {
+				length = sqrt((ally[tar]->pos.x - enemy[i]->pos.x)*(ally[tar]->pos.x - enemy[i]->pos.x) + 
+				(ally[tar]->pos.y - enemy[i]->pos.y)*(ally[tar]->pos.y - enemy[i]->pos.y));
+				if (length <= SHOT && enemy[i]->bullet_counter == 0) {
+					struct bullet *new_bullet = malloc(sizeof(struct bullet));
+					new_bullet->speed = BULLET_SPEED;
+					new_bullet->pos.x = enemy[i]->pos.x + enemy[i]->direction.x*8;
+					new_bullet->pos.y = enemy[i]->pos.y + enemy[i]->direction.y*8;
+					new_bullet->pos.z = enemy[i]->pos.z + 8*0.25;
+					new_bullet->direction.x = enemy[i]->direction.x*BULLET_SPEED/BOTTLE_SPEED;
+					new_bullet->direction.y = enemy[i]->direction.y*BULLET_SPEED/BOTTLE_SPEED;
+					new_bullet->damage = enemy[i]->damage;
+					new_bullet->party = SCOURGE;
+					new_bullet->owner_tower = -1;
+					new_bullet->owner_bottle = i;
+					new_bullet->target_tower = -1;
+					new_bullet->target_bottle = tar;
+					new_bullet->prev = bullet_head;
+					new_bullet->next = bullet_head->next;
+					bullet_head->next = new_bullet;
+					bullet_head->next->prev = new_bullet;
+					enemy[i]->bullet_counter = (int) ((float) 60*20 / (float) enemy[i]->agility);
+				}
+			}
+		} else if (enemy[i]->target_tower != -1) {
+			int tar = enemy[i]->target_tower;
+			length = sqrt((a_tower[tar].pos.x - enemy[i]->pos.x)*(a_tower[tar].pos.x - enemy[i]->pos.x) + 
+				(a_tower[tar].pos.y - enemy[i]->pos.y)*(a_tower[tar].pos.y - enemy[i]->pos.y));
+			if (length <= SHOT && enemy[i]->bullet_counter == 0) {
+				struct bullet *new_bullet = malloc(sizeof(struct bullet));
+				new_bullet->speed = BULLET_SPEED;
+				new_bullet->pos.x = enemy[i]->pos.x + enemy[i]->direction.x*8;
+				new_bullet->pos.y = enemy[i]->pos.y + enemy[i]->direction.y*8;
+				new_bullet->pos.z = enemy[i]->pos.z + 8*0.25;
+				new_bullet->direction.x = enemy[i]->direction.x*BULLET_SPEED/BOTTLE_SPEED;
+				new_bullet->direction.y = enemy[i]->direction.y*BULLET_SPEED/BOTTLE_SPEED;
+				new_bullet->damage = enemy[i]->damage;
+				new_bullet->party = SCOURGE;
+				new_bullet->owner_tower = -1;
+				new_bullet->owner_bottle = i;
+				new_bullet->target_tower = tar;
+				new_bullet->target_bottle = -1;
+				new_bullet->prev = bullet_head;
+				new_bullet->next = bullet_head->next;
+				bullet_head->next = new_bullet;
+				bullet_head->next->prev = new_bullet;
+				enemy[i]->bullet_counter = (int) ((float) 60*20 / (float) enemy[i]->agility);
+			}
+		}
+	}
+
+	for (i = 0; i < 10; ++i) {
+		float length;
+		if (a_tower[i].target != -1) {
+			int tar = a_tower[i].target;
+			length = sqrt((enemy[tar]->pos.x - a_tower[i].pos.x)*(enemy[tar]->pos.x - a_tower[i].pos.x) + 
+			(enemy[tar]->pos.y - a_tower[i].pos.y)*(enemy[tar]->pos.y - a_tower[i].pos.y));
+			if (length <= SHOT_TOWER && a_tower[i].bullet_counter == 0) {
+				struct bullet *new_bullet = malloc(sizeof(struct bullet));
+				new_bullet->speed = BULLET_SPEED;
+				new_bullet->pos.x = a_tower[i].pos.x + a_tower[i].direction2.x*a_tower[i].size;
+				new_bullet->pos.y = a_tower[i].pos.y + a_tower[i].direction2.y*a_tower[i].size;
+				new_bullet->pos.z = a_tower[i].pos.z + a_tower[i].size*0.25;
+				new_bullet->direction.x = a_tower[i].direction2.x*BULLET_SPEED/BOTTLE_SPEED;
+				new_bullet->direction.y = a_tower[i].direction2.y*BULLET_SPEED/BOTTLE_SPEED;
+				new_bullet->damage = a_tower[i].damage;
+				new_bullet->party = SENTINEL;
+				new_bullet->owner_tower = i;
+				new_bullet->owner_bottle = -1;
+				new_bullet->target_tower = -1;
+				new_bullet->target_bottle = tar;
+				new_bullet->prev = bullet_head;
+				new_bullet->next = bullet_head->next;
+				bullet_head->next = new_bullet;
+				bullet_head->next->prev = new_bullet;
+				a_tower[i].bullet_counter = (int) ((float) 60*20 / (float) 45);
+			}
+		} 
+	}
+
+	for (i = 0; i < 10; ++i) {
+		float length;
+		if (e_tower[i].target != -1) {
+			int tar = e_tower[i].target;
+			length = sqrt((ally[tar]->pos.x - e_tower[i].pos.x)*(ally[tar]->pos.x - e_tower[i].pos.x) + 
+			(ally[tar]->pos.y - e_tower[i].pos.y)*(ally[tar]->pos.y - e_tower[i].pos.y));
+			if (length <= SHOT_TOWER && e_tower[i].bullet_counter == 0) {
+				struct bullet *new_bullet = malloc(sizeof(struct bullet));
+				new_bullet->speed = BULLET_SPEED;
+				new_bullet->pos.x = e_tower[i].pos.x + e_tower[i].direction2.x*e_tower[i].size;
+				new_bullet->pos.y = e_tower[i].pos.y + e_tower[i].direction2.y*e_tower[i].size;
+				new_bullet->pos.z = e_tower[i].pos.z + e_tower[i].size*0.25;
+				new_bullet->direction.x = e_tower[i].direction2.x*BULLET_SPEED/BOTTLE_SPEED;
+				new_bullet->direction.y = e_tower[i].direction2.y*BULLET_SPEED/BOTTLE_SPEED;
+				new_bullet->damage = e_tower[i].damage;
+				new_bullet->party = SCOURGE;
+				new_bullet->owner_tower = i;
+				new_bullet->owner_bottle = -1;
+				new_bullet->target_tower = -1;
+				new_bullet->target_bottle = tar;
+				new_bullet->prev = bullet_head;
+				new_bullet->next = bullet_head->next;
+				bullet_head->next = new_bullet;
+				bullet_head->next->prev = new_bullet;
+				e_tower[i].bullet_counter = (int) ((float) 60*20 / (float) 45);
+			}
+		} 
+	}
+
+	if (my->bullet_counter > 0) {
+		--my->bullet_counter;
+	}
+
+	for (i = 0; i < 9; ++i) {
+		if(ally[i]->bullet_counter > 0) {
+			--ally[i]->bullet_counter;
+		}
+	}
+
+	for (i = 0; i < 10; ++i) {
+		if (enemy[i]->bullet_counter > 0) {
+			--enemy[i]->bullet_counter;
+		}
+	}
+
+	for (i = 0; i < 10; ++i) {
+		if (a_tower[i].bullet_counter > 0) {
+			--a_tower[i].bullet_counter;
+		}
+	}
+
+	for (i = 0; i < 10; ++i) {
+		if (e_tower[i].bullet_counter > 0) {
+			--e_tower[i].bullet_counter;
+		}
+	}
 }
 
 void adjust_bottle_angle()
@@ -419,7 +704,7 @@ void refresh_bottle_positions()
 		my->pos.y -= my->direction.y;
 		my->speed = 0;
 		my->direction.x = my->direction.y = 0;
-	} else {
+	} else if (my->state == FOCUSED) {
 		float length;
 		length = sqrt((my->pos.x - my_dstx)*(my->pos.x - my_dstx) + 
 				(my->pos.y - my_dsty)*(my->pos.y - my_dsty));
@@ -428,6 +713,62 @@ void refresh_bottle_positions()
 			my->pos.y = my_dsty + 0.001;
 			my->speed = 0;
 			my->direction.x = my->direction.y = 0;
+		}
+	}
+
+	if (my->target_bottle != -1) {
+		int tar = my->target_bottle;
+		float length;
+		float vecx, vecy, ratiox, ratioy;
+		length = sqrt((enemy[tar]->pos.x - my->pos.x)*(enemy[tar]->pos.x - my->pos.x) + 
+			(enemy[tar]->pos.y - my->pos.y)*(enemy[tar]->pos.y - my->pos.y));
+		if (length <= SHOT - 6) {
+			float atan_val;
+			float angle;
+			my->speed = 0;
+			vecx = (enemy[tar]->pos.x - my->pos.x);
+			vecy = (enemy[tar]->pos.y - my->pos.y);
+			ratiox = vecx / length;
+			ratioy = vecy / length;
+			atan_val = atan((float) bb_abs(ratioy) / (float) bb_abs(ratiox));
+			angle = (atan_val / PI) * 180;
+			if (ratiox > 0 && ratioy >= 0) {
+				angle += 0;
+			} else if (ratiox <=0 && ratioy > 0) {
+				angle = 180 - angle;
+			} else if (ratiox < 0 && ratioy <= 0) {
+				angle += 180;
+			} else {
+				angle = -angle;
+			}
+			my->angle = angle;
+			my->direction.x = my->direction.y = 0;
+		} else {
+			vecx = (enemy[tar]->pos.x - my->pos.x);
+			vecy = (enemy[tar]->pos.y - my->pos.y);
+			ratiox = vecx / length;
+			ratioy = vecy / length;
+			my->speed = BOTTLE_SPEED;
+			my->direction.x = BOTTLE_SPEED * ratiox;
+			my->direction.y = BOTTLE_SPEED * ratioy;
+		}
+	} else if (my->target_tower != -1) {
+		int tar = my->target_tower;
+		float length;
+		float vecx, vecy, ratiox, ratioy;
+		length = sqrt((e_tower[tar].pos.x - my->pos.x)*(e_tower[tar].pos.x - my->pos.x) + 
+			(e_tower[tar].pos.y - my->pos.y)*(e_tower[tar].pos.y - my->pos.y));
+		if (length <= SHOT - 6) {
+			my->speed = 0;
+			my->direction.x = my->direction.y = 0;
+		} else {
+			vecx = (e_tower[tar].pos.x - my->pos.x);
+			vecy = (e_tower[tar].pos.y - my->pos.y);
+			ratiox = vecx / length;
+			ratioy = vecy / length;
+			my->speed = BOTTLE_SPEED;
+			my->direction.x = BOTTLE_SPEED * ratiox;
+			my->direction.y = BOTTLE_SPEED * ratioy;
 		}
 	}
 
@@ -605,8 +946,27 @@ void refresh_bottle_positions()
 
 int is_at_obstacle(int x, int y)
 {
+	int i;
+	float length;
+
 	if (map[(y + 750)*1500 + x + 750] == 1) {
 		return 1;
+	}
+
+	for (i = 0; i < 10; ++i) {
+		length = sqrt((e_tower[i].pos.x - x)*(e_tower[i].pos.x - x) + 
+				(e_tower[i].pos.y - y)*(e_tower[i].pos.y - y));
+		if (length <= 12) {
+			return 1;
+		}
+	}
+
+	for (i = 0; i < 10; ++i) {
+		length = sqrt((a_tower[i].pos.x - x)*(a_tower[i].pos.x - x) + 
+				(a_tower[i].pos.y - y)*(a_tower[i].pos.y - y));
+		if (length <= 12) {
+			return 1;
+		}
 	}
 
 	return 0;
@@ -622,7 +982,7 @@ void refresh_bullet_positions()
 	while (temp != bullet_tail) {
 		temp->pos.x += temp->direction.x;
 		temp->pos.y += temp->direction.y;
-		if (temp->owner == SENTINEL) {
+		if (temp->owner_bottle == SENTINEL || temp->owner_tower == SENTINEL) {
 			if (temp->target_tower != -1) {
 				tar = temp->target_tower;
 				length = sqrt((e_tower[tar].pos.x - temp->pos.x)*(e_tower[tar].pos.x - temp->pos.x) + 
@@ -644,7 +1004,7 @@ void refresh_bullet_positions()
 				temp->direction.x = BULLET_SPEED * ratiox;
 				temp->direction.y = BULLET_SPEED * ratioy;
 			}
-		} else if (temp->owner == SCOURGE) {
+		} else if (temp->owner_bottle == SCOURGE || temp->owner_tower == SCOURGE) {
 			if (temp->target_tower != -1) {
 				tar = temp->target_tower;
 				length = sqrt((a_tower[tar].pos.x - temp->pos.x)*(a_tower[tar].pos.x - temp->pos.x) + 
@@ -656,15 +1016,26 @@ void refresh_bullet_positions()
 				temp->direction.x = BULLET_SPEED * ratiox;
 				temp->direction.y = BULLET_SPEED * ratioy;
 			} else if (temp->target_bottle != -1) {
-				tar = temp->target_bottle;
-				length = sqrt((ally[tar]->pos.x - temp->pos.x)*(ally[tar]->pos.x - temp->pos.x) + 
-					(ally[tar]->pos.y - temp->pos.y)*(ally[tar]->pos.y - temp->pos.y));
-				vecx = ally[tar]->pos.x - temp->pos.x;
-				vecy = ally[tar]->pos.y - temp->pos.y;
-				ratiox = vecx / length;
-				ratioy = vecy / length;
-				temp->direction.x = BULLET_SPEED * ratiox;
-				temp->direction.y = BULLET_SPEED * ratioy;
+				if (temp->target_bottle == 9) {
+					length = sqrt((my->pos.x - temp->pos.x)*(my->pos.x - temp->pos.x) + 
+						(my->pos.y - temp->pos.y)*(my->pos.y - temp->pos.y));
+					vecx = my->pos.x - temp->pos.x;
+					vecy = my->pos.y - temp->pos.y;
+					ratiox = vecx / length;
+					ratioy = vecy / length;
+					temp->direction.x = BULLET_SPEED * ratiox;
+					temp->direction.y = BULLET_SPEED * ratioy;
+				} else {
+					tar = temp->target_bottle;
+					length = sqrt((ally[tar]->pos.x - temp->pos.x)*(ally[tar]->pos.x - temp->pos.x) + 
+						(ally[tar]->pos.y - temp->pos.y)*(ally[tar]->pos.y - temp->pos.y));
+					vecx = ally[tar]->pos.x - temp->pos.x;
+					vecy = ally[tar]->pos.y - temp->pos.y;
+					ratiox = vecx / length;
+					ratioy = vecy / length;
+					temp->direction.x = BULLET_SPEED * ratiox;
+					temp->direction.y = BULLET_SPEED * ratioy;
+				}	
 			}
 		}
 		temp = temp->next;

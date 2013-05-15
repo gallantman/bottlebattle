@@ -120,19 +120,19 @@ int click_enemy_tower(int x, int y)
 	for (i = 0; i < 10; ++i) {
 		dist = sqrt((x - e_tower[i].pos.x)*(x - e_tower[i].pos.x) + (y - e_tower[i].pos.y)*(y - e_tower[i].pos.y));
 		if (i == 0 || i == 3 || i == 6) {
-			if (dist <= 10) {
+			if (dist <= 10 && e_tower[i].blood > 0) {
 				return i;
 			}
 		} else if (i == 1 || i == 4 || i == 7) {
-			if (dist <= 12) {
+			if (dist <= 12 && e_tower[i].blood > 0) {
 				return i;
 			}
 		} else if (i == 2 || i == 5 || i == 8) {
-			if (dist <= 14) {
+			if (dist <= 14 && e_tower[i].blood > 0) {
 				return i;
 			}
 		} else if (i == 9) {
-			if (dist <= 18) {
+			if (dist <= 18 && e_tower[i].blood > 0) {
 				return i;
 			}
 		}
