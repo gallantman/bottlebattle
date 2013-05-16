@@ -168,7 +168,7 @@ void init_creatures()
 	my->item[5] = 36 - 11;
 	my->item[6] = 80 - 11;
 	my->item[7] = 59 - 11;
-	my->gold = 84453;
+	my->gold = 853;
 	my->kill = 0;
 	my->death = 0;
 	my->angle = 0.0;
