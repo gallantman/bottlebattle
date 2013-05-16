@@ -238,8 +238,95 @@ void bb_display_right(void)
 	if (state == CHOOSE) {
 		right_render_choose();
 	} else if (state == FIGHT) {
-		right_render_choose();
+		right_render_choose2();
 	}
+}
+
+void right_render_choose2()
+{
+	int i;
+	int posx, posy;
+	float ratio;
+	int relativex, relativey;
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, 400, 0, 1080);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glRasterPos2i(0, 0);
+	glDrawPixels(400, 1080, GL_BGRA, GL_UNSIGNED_BYTE, wood);
+	glRasterPos2i(20, 700);
+	glDrawPixels(360, 360, GL_BGRA, GL_UNSIGNED_BYTE, small_map);
+	for (i = 0; i < 5; ++i) {
+		posx = 80*i + 8;
+		posy = 620;
+		glRasterPos2i(posx, posy);
+		if (my->spell[i] == -1) {
+			glDrawPixels(64, 64, GL_BGRA, GL_UNSIGNED_BYTE, blank);
+		} else {
+			glDrawPixels(64, 64, GL_BGRA, GL_UNSIGNED_BYTE, spells[my->spell[i]]);
+		}
+	}
+	for (i = 0; i < 4; ++i) {
+		posx = 100*i + 18;
+		posy = 100;
+		glRasterPos2i(posx, posy);
+		if (my->item[i] == -1){
+			glDrawPixels(64, 64, GL_BGRA, GL_UNSIGNED_BYTE, blank);
+		} else {
+			glDrawPixels(64, 64, GL_BGRA, GL_UNSIGNED_BYTE, items[my->item[i]]);
+		}
+	}
+	for (i = 0; i < 4; ++i) {
+		posx = 100*i + 18;
+		posy = 20;
+		glRasterPos2i(posx, posy);
+		if (my->item[i + 4] == -1) {
+			glDrawPixels(64, 64, GL_BGRA, GL_UNSIGNED_BYTE, blank);
+		} else {
+			glDrawPixels(64, 64, GL_BGRA, GL_UNSIGNED_BYTE, items[my->item[i + 4]]);
+		}
+		
+	}
+	for (i = 0; i < 9; ++i) {
+		ratio = (float) 360 / (float) 1500;
+		relativex = (int) (ratio*(ally[i]->pos.x + 750));
+		relativey = (int) (ratio*(ally[i]->pos.y + 750));
+		posx = 20 + relativex;
+		posy = 700 + relativey;
+		glRasterPos2i(posx, posy);
+		glDrawPixels(20, 20, GL_BGRA, GL_UNSIGNED_BYTE, green);
+	}
+	for (i = 0; i < 10; ++i) {
+		ratio = (float) 360 / (float) 1500;
+		relativex = (int) (ratio*(enemy[i]->pos.x + 750));
+		relativey = (int) (ratio*(enemy[i]->pos.y + 750));
+		posx = 20 + relativex;
+		posy = 700 + relativey;
+		glRasterPos2i(posx, posy);
+		glDrawPixels(20, 20, GL_BGRA, GL_UNSIGNED_BYTE, red);
+	}
+	ratio = (float) 360 / (float) 1500;
+	relativex = (int) (ratio*(my->pos.x + 750));
+	relativey = (int) (ratio*(my->pos.y + 750));
+	posx = 20 + relativex;
+	posy = 700 + relativey;
+	glRasterPos2i(posx, posy);
+	glDrawPixels(20, 20, GL_BGRA, GL_UNSIGNED_BYTE, blue);
+	print_number(my->gold, 100, 560);
+	print_number(my->level, 250, 560);
+	print_number(my->blood, 100, 480);
+	print_number(my->full_blood, 250, 480);
+	print_number(my->mana, 100, 400);
+	print_number(my->full_mana, 250, 400);
+	print_number(my->agility, 35, 320);
+	print_number(my->strength, 135, 320);
+	print_number(my->intelligence, 235, 320);
+	print_number(my->armor, 335, 320);
+	print_number(my->damage, 180, 240);
+	print_number(my->kill, 100, 160);
+	print_number(my->death, 250, 160);
+	glutSwapBuffers();
+	glFlush();
 }
 
 void right_render_choose()
@@ -299,6 +386,19 @@ void refresh()
 	adjust_bottle_angle();
 	adjust_tower_angle();
 	refresh_bottle_status();
+	refresh_gold();
+}
+
+void refresh_gold()
+{
+	if (state == FIGHT) {
+		++gold_counter;
+
+		if (gold_counter == 20) {
+			gold_counter = 0;
+			++my->gold;
+		}
+	}
 }
 
 void refresh_bottle_status()
@@ -367,8 +467,8 @@ void generate_bullet()
 			new_bullet->pos.x = my->pos.x + my->direction.x*8;
 			new_bullet->pos.y = my->pos.y + my->direction.y*8;
 			new_bullet->pos.z = my->pos.z + 8*0.25;
-			new_bullet->direction.x = ratiox * BOTTLE_SPEED;
-			new_bullet->direction.y = ratioy * BOTTLE_SPEED;
+			new_bullet->direction.x = ratiox * BULLET_SPEED;
+			new_bullet->direction.y = ratioy * BULLET_SPEED;
 			new_bullet->damage = my->damage;
 			new_bullet->counter = 0;
 			new_bullet->party = SENTINEL;
@@ -379,7 +479,7 @@ void generate_bullet()
 			new_bullet->prev = bullet_head;
 			new_bullet->next = bullet_head->next;
 			bullet_head->next = new_bullet;
-			bullet_head->next->prev = new_bullet; 
+			new_bullet->next->prev = new_bullet; 
 			my->bullet_counter = (int) ((float) 60*20 / (float) my->agility);
 		}
 	} else if (my->target_tower != -1) {
@@ -398,8 +498,8 @@ void generate_bullet()
 			new_bullet->pos.x = my->pos.x + my->direction.x*8;
 			new_bullet->pos.y = my->pos.y + my->direction.y*8;
 			new_bullet->pos.z = my->pos.z + 8*0.25;
-			new_bullet->direction.x = ratiox * BOTTLE_SPEED;
-			new_bullet->direction.y = ratioy * BOTTLE_SPEED;
+			new_bullet->direction.x = ratiox * BULLET_SPEED;
+			new_bullet->direction.y = ratioy * BULLET_SPEED;
 			new_bullet->damage = my->damage;
 			new_bullet->counter = 0;
 			new_bullet->party = SENTINEL;
@@ -410,7 +510,7 @@ void generate_bullet()
 			new_bullet->prev = bullet_head;
 			new_bullet->next = bullet_head->next;
 			bullet_head->next = new_bullet;
-			bullet_head->next->prev = new_bullet;
+			new_bullet->next->prev = new_bullet;
 			my->bullet_counter = (int) ((float) 60*20 / (float) my->agility);
 		}
 	}
@@ -419,16 +519,21 @@ void generate_bullet()
 		float length;
 		if (ally[i]->target_bottle != -1) {
 			int tar = ally[i]->target_bottle;
+			float vecx, vecy, ratiox, ratioy;
 			length = sqrt((enemy[tar]->pos.x - ally[i]->pos.x)*(enemy[tar]->pos.x - ally[i]->pos.x) + 
 				(enemy[tar]->pos.y - ally[i]->pos.y)*(enemy[tar]->pos.y - ally[i]->pos.y));
 			if (length <= SHOT && ally[i]->bullet_counter == 0) {
 				struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
+				vecx = enemy[tar]->pos.x - ally[i]->pos.x;
+				vecy = enemy[tar]->pos.y - ally[i]->pos.y;
+				ratiox = vecx / length;
+				ratioy = vecy / length;
 				new_bullet->speed = BULLET_SPEED;
 				new_bullet->pos.x = ally[i]->pos.x + ally[i]->direction.x*8;
 				new_bullet->pos.y = ally[i]->pos.y + ally[i]->direction.y*8;
 				new_bullet->pos.z = ally[i]->pos.z + 8*0.25;
-				new_bullet->direction.x = ally[i]->direction.x*BULLET_SPEED/BOTTLE_SPEED;
-				new_bullet->direction.y = ally[i]->direction.y*BULLET_SPEED/BOTTLE_SPEED;
+				new_bullet->direction.x = ratiox*BULLET_SPEED;
+				new_bullet->direction.y = ratioy*BULLET_SPEED;
 				new_bullet->damage = ally[i]->damage;
 				new_bullet->counter = 0;
 				new_bullet->party = SENTINEL;
@@ -439,21 +544,26 @@ void generate_bullet()
 				new_bullet->prev = bullet_head;
 				new_bullet->next = bullet_head->next;
 				bullet_head->next = new_bullet;
-				bullet_head->next->prev = new_bullet;
+				new_bullet->next->prev = new_bullet;
 				ally[i]->bullet_counter = (int) ((float) 60*20 / (float) ally[i]->agility); 
 			}
 		} else if (ally[i]->target_tower != -1) {
 			int tar = ally[i]->target_tower;
+			float vecx, vecy, ratiox, ratioy;
 			length = sqrt((e_tower[tar].pos.x - ally[i]->pos.x)*(e_tower[tar].pos.x - ally[i]->pos.x) + 
 				(e_tower[tar].pos.y - ally[i]->pos.y)*(e_tower[tar].pos.y - ally[i]->pos.y));
 			if (length <= SHOT && ally[i]->bullet_counter == 0) {
 				struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
+				vecx = e_tower[tar].pos.x - ally[i]->pos.x;
+				vecy = e_tower[tar].pos.y - ally[i]->pos.y;
+				ratiox = vecx / length;
+				ratioy = vecy / length;
 				new_bullet->speed = BULLET_SPEED;
 				new_bullet->pos.x = ally[i]->pos.x + ally[i]->direction.x*8;
 				new_bullet->pos.y = ally[i]->pos.y + ally[i]->direction.y*8;
 				new_bullet->pos.z = ally[i]->pos.z + 8*0.25;
-				new_bullet->direction.x = ally[i]->direction.x*BULLET_SPEED/BOTTLE_SPEED;
-				new_bullet->direction.y = ally[i]->direction.y*BULLET_SPEED/BOTTLE_SPEED;
+				new_bullet->direction.x = ratiox*BULLET_SPEED;
+				new_bullet->direction.y = ratioy*BULLET_SPEED;
 				new_bullet->damage = ally[i]->damage;
 				new_bullet->counter = 0;
 				new_bullet->party = SENTINEL;
@@ -464,7 +574,7 @@ void generate_bullet()
 				new_bullet->prev = bullet_head;
 				new_bullet->next = bullet_head->next;
 				bullet_head->next = new_bullet;
-				bullet_head->next->prev = new_bullet;
+				new_bullet->next->prev = new_bullet;
 				ally[i]->bullet_counter = (int) ((float) 60*20 / (float) ally[i]->agility);
 			}
 		}
@@ -472,6 +582,7 @@ void generate_bullet()
 
 	for (i = 0; i < 10; ++i) {
 		float length;
+		float vecx, vecy, ratiox, ratioy;
 		if (enemy[i]->target_bottle != -1) {
 			int tar = enemy[i]->target_bottle;
 			if (tar == 9) {
@@ -479,12 +590,16 @@ void generate_bullet()
 				(my->pos.y - enemy[i]->pos.y)*(my->pos.y - enemy[i]->pos.y));
 				if (length <= SHOT && enemy[i]->bullet_counter == 0) {
 					struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
+					vecx = my->pos.x - enemy[i]->pos.x;
+					vecy = my->pos.y - enemy[i]->pos.y;
+					ratiox = vecx / length;
+					ratioy = vecy / length;
 					new_bullet->speed = BULLET_SPEED;
 					new_bullet->pos.x = enemy[i]->pos.x + enemy[i]->direction.x*8;
 					new_bullet->pos.y = enemy[i]->pos.y + enemy[i]->direction.y*8;
 					new_bullet->pos.z = enemy[i]->pos.z + 8*0.25;
-					new_bullet->direction.x = enemy[i]->direction.x*BULLET_SPEED/BOTTLE_SPEED;
-					new_bullet->direction.y = enemy[i]->direction.y*BULLET_SPEED/BOTTLE_SPEED;
+					new_bullet->direction.x = ratiox*BULLET_SPEED;
+					new_bullet->direction.y = ratioy*BULLET_SPEED;
 					new_bullet->damage = enemy[i]->damage;
 					new_bullet->counter = 0;
 					new_bullet->party = SCOURGE;
@@ -495,7 +610,7 @@ void generate_bullet()
 					new_bullet->prev = bullet_head;
 					new_bullet->next = bullet_head->next;
 					bullet_head->next = new_bullet;
-					bullet_head->next->prev = new_bullet;
+					new_bullet->next->prev = new_bullet;
 					enemy[i]->bullet_counter = (int) ((float) 60*20 / (float) enemy[i]->agility);
 				}
 			} else {
@@ -503,12 +618,16 @@ void generate_bullet()
 				(ally[tar]->pos.y - enemy[i]->pos.y)*(ally[tar]->pos.y - enemy[i]->pos.y));
 				if (length <= SHOT && enemy[i]->bullet_counter == 0) {
 					struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
+					vecx = ally[tar]->pos.x - enemy[i]->pos.x;
+					vecy = ally[tar]->pos.y - enemy[i]->pos.y;
+					ratiox = vecx / length;
+					ratioy = vecy / length;
 					new_bullet->speed = BULLET_SPEED;
 					new_bullet->pos.x = enemy[i]->pos.x + enemy[i]->direction.x*8;
 					new_bullet->pos.y = enemy[i]->pos.y + enemy[i]->direction.y*8;
 					new_bullet->pos.z = enemy[i]->pos.z + 8*0.25;
-					new_bullet->direction.x = enemy[i]->direction.x*BULLET_SPEED/BOTTLE_SPEED;
-					new_bullet->direction.y = enemy[i]->direction.y*BULLET_SPEED/BOTTLE_SPEED;
+					new_bullet->direction.x = ratiox*BULLET_SPEED;
+					new_bullet->direction.y = ratioy*BULLET_SPEED;
 					new_bullet->damage = enemy[i]->damage;
 					new_bullet->counter = 0;
 					new_bullet->party = SCOURGE;
@@ -519,7 +638,7 @@ void generate_bullet()
 					new_bullet->prev = bullet_head;
 					new_bullet->next = bullet_head->next;
 					bullet_head->next = new_bullet;
-					bullet_head->next->prev = new_bullet;
+					new_bullet->next->prev = new_bullet;
 					enemy[i]->bullet_counter = (int) ((float) 60*20 / (float) enemy[i]->agility);
 				}
 			}
@@ -529,12 +648,16 @@ void generate_bullet()
 				(a_tower[tar].pos.y - enemy[i]->pos.y)*(a_tower[tar].pos.y - enemy[i]->pos.y));
 			if (length <= SHOT && enemy[i]->bullet_counter == 0) {
 				struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
+				vecx = a_tower[tar].pos.x - enemy[i]->pos.x;
+				vecy = a_tower[tar].pos.y - enemy[i]->pos.y;
+				ratiox = vecx / length;
+				ratioy = vecy / length;
 				new_bullet->speed = BULLET_SPEED;
 				new_bullet->pos.x = enemy[i]->pos.x + enemy[i]->direction.x*8;
 				new_bullet->pos.y = enemy[i]->pos.y + enemy[i]->direction.y*8;
 				new_bullet->pos.z = enemy[i]->pos.z + 8*0.25;
-				new_bullet->direction.x = enemy[i]->direction.x*BULLET_SPEED/BOTTLE_SPEED;
-				new_bullet->direction.y = enemy[i]->direction.y*BULLET_SPEED/BOTTLE_SPEED;
+				new_bullet->direction.x = ratiox*BULLET_SPEED;
+				new_bullet->direction.y = ratioy*BULLET_SPEED;
 				new_bullet->damage = enemy[i]->damage;
 				new_bullet->counter = 0;
 				new_bullet->party = SCOURGE;
@@ -545,7 +668,7 @@ void generate_bullet()
 				new_bullet->prev = bullet_head;
 				new_bullet->next = bullet_head->next;
 				bullet_head->next = new_bullet;
-				bullet_head->next->prev = new_bullet;
+				new_bullet->next->prev = new_bullet;
 				enemy[i]->bullet_counter = (int) ((float) 60*20 / (float) enemy[i]->agility);
 			}
 		}
@@ -553,18 +676,23 @@ void generate_bullet()
 
 	for (i = 0; i < 10; ++i) {
 		float length;
+		float vecx, vecy, ratiox, ratioy;
 		if (a_tower[i].target != -1 && a_tower[i].state == ATTACK_TOWER) {
 			int tar = a_tower[i].target;
 			length = sqrt((enemy[tar]->pos.x - a_tower[i].pos.x)*(enemy[tar]->pos.x - a_tower[i].pos.x) + 
 			(enemy[tar]->pos.y - a_tower[i].pos.y)*(enemy[tar]->pos.y - a_tower[i].pos.y));
 			if (length <= SHOT_TOWER && a_tower[i].bullet_counter == 0) {
 				struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
+				vecx = enemy[tar]->pos.x - a_tower[i].pos.x;
+				vecy = enemy[tar]->pos.y - a_tower[i].pos.y;
+				ratiox = vecx / length;
+				ratioy = vecy / length;
 				new_bullet->speed = BULLET_SPEED;
 				new_bullet->pos.x = a_tower[i].pos.x + a_tower[i].direction2.x*a_tower[i].size;
 				new_bullet->pos.y = a_tower[i].pos.y + a_tower[i].direction2.y*a_tower[i].size;
 				new_bullet->pos.z = a_tower[i].pos.z + a_tower[i].size*0.25;
-				new_bullet->direction.x = a_tower[i].direction2.x*BULLET_SPEED/BOTTLE_SPEED;
-				new_bullet->direction.y = a_tower[i].direction2.y*BULLET_SPEED/BOTTLE_SPEED;
+				new_bullet->direction.x = ratiox*BULLET_SPEED;
+				new_bullet->direction.y = ratioy*BULLET_SPEED;
 				new_bullet->damage = a_tower[i].damage;
 				new_bullet->counter = 0;
 				new_bullet->party = SENTINEL;
@@ -575,7 +703,7 @@ void generate_bullet()
 				new_bullet->prev = bullet_head;
 				new_bullet->next = bullet_head->next;
 				bullet_head->next = new_bullet;
-				bullet_head->next->prev = new_bullet;
+				new_bullet->next->prev = new_bullet;
 				a_tower[i].bullet_counter = (int) ((float) 60*20 / (float) 45);
 			}
 		} 
@@ -583,32 +711,67 @@ void generate_bullet()
 
 	for (i = 0; i < 10; ++i) {
 		float length;
+		float vecx, vecy, ratiox, ratioy;
 		if (e_tower[i].target != -1 && e_tower[i].state == ATTACK_TOWER) {
 			int tar = e_tower[i].target;
-			length = sqrt((ally[tar]->pos.x - e_tower[i].pos.x)*(ally[tar]->pos.x - e_tower[i].pos.x) + 
-			(ally[tar]->pos.y - e_tower[i].pos.y)*(ally[tar]->pos.y - e_tower[i].pos.y));
-			if (length <= SHOT_TOWER && e_tower[i].bullet_counter == 0) {
-				struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
-				new_bullet->speed = BULLET_SPEED;
-				new_bullet->pos.x = e_tower[i].pos.x + e_tower[i].direction2.x*e_tower[i].size;
-				new_bullet->pos.y = e_tower[i].pos.y + e_tower[i].direction2.y*e_tower[i].size;
-				new_bullet->pos.z = e_tower[i].pos.z + e_tower[i].size*0.25;
-				new_bullet->direction.x = e_tower[i].direction2.x*BULLET_SPEED/BOTTLE_SPEED;
-				new_bullet->direction.y = e_tower[i].direction2.y*BULLET_SPEED/BOTTLE_SPEED;
-				new_bullet->damage = e_tower[i].damage;
-				new_bullet->counter = 0;
-				new_bullet->party = SCOURGE;
-				new_bullet->owner_tower = i;
-				new_bullet->owner_bottle = -1;
-				new_bullet->target_tower = -1;
-				new_bullet->target_bottle = tar;
-				new_bullet->prev = bullet_head;
-				new_bullet->next = bullet_head->next;
-				bullet_head->next = new_bullet;
-				bullet_head->next->prev = new_bullet;
-				e_tower[i].bullet_counter = (int) ((float) 60*20 / (float) 45);
-			}
-		} 
+			if (tar == 9) {
+				length = sqrt((my->pos.x - e_tower[i].pos.x)*(my->pos.x - e_tower[i].pos.x) + 
+				(my->pos.y - e_tower[i].pos.y)*(my->pos.y - e_tower[i].pos.y));
+				if (length <= SHOT_TOWER && e_tower[i].bullet_counter == 0) {
+					struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
+					vecx = my->pos.x - e_tower[i].pos.x;
+					vecy = my->pos.y - e_tower[i].pos.y;
+					ratiox = vecx / length;
+					ratioy = vecy / length;
+					new_bullet->speed = BULLET_SPEED;
+					new_bullet->pos.x = e_tower[i].pos.x + e_tower[i].direction2.x*e_tower[i].size;
+					new_bullet->pos.y = e_tower[i].pos.y + e_tower[i].direction2.y*e_tower[i].size;
+					new_bullet->pos.z = e_tower[i].pos.z + e_tower[i].size*0.25;
+					new_bullet->direction.x = ratiox*BULLET_SPEED;
+					new_bullet->direction.y = ratioy*BULLET_SPEED;
+					new_bullet->damage = e_tower[i].damage;
+					new_bullet->counter = 0;
+					new_bullet->party = SCOURGE;
+					new_bullet->owner_tower = i;
+					new_bullet->owner_bottle = -1;
+					new_bullet->target_tower = -1;
+					new_bullet->target_bottle = tar;
+					new_bullet->prev = bullet_head;
+					new_bullet->next = bullet_head->next;
+					bullet_head->next = new_bullet;
+					new_bullet->next->prev = new_bullet;
+					e_tower[i].bullet_counter = (int) ((float) 60*20 / (float) 45);
+				}
+			} else {
+				length = sqrt((ally[tar]->pos.x - e_tower[i].pos.x)*(ally[tar]->pos.x - e_tower[i].pos.x) + 
+				(ally[tar]->pos.y - e_tower[i].pos.y)*(ally[tar]->pos.y - e_tower[i].pos.y));
+				if (length <= SHOT_TOWER && e_tower[i].bullet_counter == 0) {
+					struct bullet *new_bullet = bb_malloc(sizeof(struct bullet));
+					vecx = ally[tar]->pos.x - e_tower[i].pos.x;
+					vecy = ally[tar]->pos.y - e_tower[i].pos.y;
+					ratiox = vecx / length;
+					ratioy = vecy / length;
+					new_bullet->speed = BULLET_SPEED;
+					new_bullet->pos.x = e_tower[i].pos.x + e_tower[i].direction2.x*e_tower[i].size;
+					new_bullet->pos.y = e_tower[i].pos.y + e_tower[i].direction2.y*e_tower[i].size;
+					new_bullet->pos.z = e_tower[i].pos.z + e_tower[i].size*0.25;
+					new_bullet->direction.x = ratiox*BULLET_SPEED;
+					new_bullet->direction.y = ratioy*BULLET_SPEED;
+					new_bullet->damage = e_tower[i].damage;
+					new_bullet->counter = 0;
+					new_bullet->party = SCOURGE;
+					new_bullet->owner_tower = i;
+					new_bullet->owner_bottle = -1;
+					new_bullet->target_tower = -1;
+					new_bullet->target_bottle = tar;
+					new_bullet->prev = bullet_head;
+					new_bullet->next = bullet_head->next;
+					bullet_head->next = new_bullet;
+					new_bullet->next->prev = new_bullet;
+					e_tower[i].bullet_counter = (int) ((float) 60*20 / (float) 45);
+				}
+			}	
+		}
 	}
 
 	if (my->bullet_counter > 0) {
@@ -646,7 +809,7 @@ void adjust_tower_angle()
 	float atan_val;
 	float angle;
 	float length;
-	float vecx, vecy;
+	float vecx, vecy, ratiox, ratioy;
 
 	for (i = 0; i < 10; ++i) {
 		if (a_tower[i].blood <= 0 || a_tower[i].state == REST) {
@@ -657,6 +820,8 @@ void adjust_tower_angle()
 					(enemy[tar]->pos.y - a_tower[i].pos.y)*(enemy[tar]->pos.y - a_tower[i].pos.y));
 			vecx = enemy[tar]->pos.x - a_tower[i].pos.x;
 			vecy = enemy[tar]->pos.y - a_tower[i].pos.y;
+			ratiox = vecx / length;
+			ratioy = vecy / length;
 			atan_val = atan((float) bb_abs(vecy) / (float) bb_abs(vecx));
 			angle = (atan_val / PI) * 180;
 			if (vecx > 0 && vecy >= 0) {
@@ -669,6 +834,8 @@ void adjust_tower_angle()
 				angle = -angle;
 			}
 			a_tower[i].direction = angle;
+			a_tower[i].direction2.x = ratiox;
+			a_tower[i].direction2.y = ratioy;
 			if (length > SHOT_TOWER) {
 				a_tower[i].state = REST;
 				a_tower[i].target = -1;
@@ -681,26 +848,57 @@ void adjust_tower_angle()
 			continue;
 		} else {
 			int tar = e_tower[i].target;
-			length = sqrt((ally[tar]->pos.x - e_tower[i].pos.x)*(ally[tar]->pos.x - e_tower[i].pos.x) + 
-					(ally[tar]->pos.y - e_tower[i].pos.y)*(ally[tar]->pos.y - e_tower[i].pos.y));
-			vecx = ally[tar]->pos.x - e_tower[i].pos.x;
-			vecy = ally[tar]->pos.y - e_tower[i].pos.y;
-			atan_val = atan((float) bb_abs(vecy) / (float) bb_abs(vecx));
-			angle = (atan_val / PI) * 180;
-			if (vecx > 0 && vecy >= 0) {
-				angle += 0;
-			} else if (vecx <=0 && vecy > 0) {
-				angle = 180 - angle;
-			} else if (vecx < 0 && vecy <= 0) {
-				angle += 180;
+			if (tar == 9) {
+				length = sqrt((my->pos.x - e_tower[i].pos.x)*(my->pos.x - e_tower[i].pos.x) + 
+					(my->pos.y - e_tower[i].pos.y)*(my->pos.y - e_tower[i].pos.y));
+				vecx = my->pos.x - e_tower[i].pos.x;
+				vecy = my->pos.y - e_tower[i].pos.y;
+				ratiox = vecx / length;
+				ratioy = vecy / length;
+				atan_val = atan((float) bb_abs(vecy) / (float) bb_abs(vecx));
+				angle = (atan_val / PI) * 180;
+				if (vecx > 0 && vecy >= 0) {
+					angle += 0;
+				} else if (vecx <=0 && vecy > 0) {
+					angle = 180 - angle;
+				} else if (vecx < 0 && vecy <= 0) {
+					angle += 180;
+				} else {
+					angle = -angle;
+				}
+				e_tower[i].direction = angle;
+				e_tower[i].direction2.x = ratiox;
+				e_tower[i].direction2.y = ratioy;
+				if (length > SHOT_TOWER) {
+					e_tower[i].state = REST;
+					e_tower[i].target = -1;
+				}
 			} else {
-				angle = -angle;
-			}
-			e_tower[i].direction = angle;
-			if (length > SHOT_TOWER) {
-				e_tower[i].state = REST;
-				e_tower[i].target = -1;
-			}
+				length = sqrt((ally[tar]->pos.x - e_tower[i].pos.x)*(ally[tar]->pos.x - e_tower[i].pos.x) + 
+					(ally[tar]->pos.y - e_tower[i].pos.y)*(ally[tar]->pos.y - e_tower[i].pos.y));
+				vecx = ally[tar]->pos.x - e_tower[i].pos.x;
+				vecy = ally[tar]->pos.y - e_tower[i].pos.y;
+				ratiox = vecx / length;
+				ratioy = vecy / length;
+				atan_val = atan((float) bb_abs(vecy) / (float) bb_abs(vecx));
+				angle = (atan_val / PI) * 180;
+				if (vecx > 0 && vecy >= 0) {
+					angle += 0;
+				} else if (vecx <=0 && vecy > 0) {
+					angle = 180 - angle;
+				} else if (vecx < 0 && vecy <= 0) {
+					angle += 180;
+				} else {
+					angle = -angle;
+				}
+				e_tower[i].direction = angle;
+				e_tower[i].direction2.x = ratiox;
+				e_tower[i].direction2.y = ratioy;
+				if (length > SHOT_TOWER) {
+					e_tower[i].state = REST;
+					e_tower[i].target = -1;
+				}
+			}	
 		}
 	}
 }
@@ -1054,10 +1252,10 @@ void refresh_bottle_positions()
 			} else if (enemy[i]->target_tower != -1) {
 				int tar = enemy[i]->target_tower;
 				enemy[i]->speed = BOTTLE_SPEED;
-				length = sqrt((e_tower[tar].pos.x - enemy[i]->pos.x)*(e_tower[tar].pos.x - enemy[i]->pos.x) + 
-					(e_tower[tar].pos.y - enemy[i]->pos.y)*(e_tower[tar].pos.y - enemy[i]->pos.y));
-				vecx = e_tower[tar].pos.x - enemy[i]->pos.x;
-				vecy = e_tower[tar].pos.y - enemy[i]->pos.y;
+				length = sqrt((a_tower[tar].pos.x - enemy[i]->pos.x)*(a_tower[tar].pos.x - enemy[i]->pos.x) + 
+					(a_tower[tar].pos.y - enemy[i]->pos.y)*(a_tower[tar].pos.y - enemy[i]->pos.y));
+				vecx = a_tower[tar].pos.x - enemy[i]->pos.x;
+				vecy = a_tower[tar].pos.y - enemy[i]->pos.y;
 				ratiox = vecx / length;
 				ratioy = vecy / length;
 				enemy[i]->direction.x = ratiox * BOTTLE_SPEED;
@@ -1099,7 +1297,7 @@ int is_at_obstacle(int x, int y)
 	for (i = 0; i < 10; ++i) {
 		length = sqrt((e_tower[i].pos.x - x)*(e_tower[i].pos.x - x) + 
 				(e_tower[i].pos.y - y)*(e_tower[i].pos.y - y));
-		if (length <= 12) {
+		if (length <= 12 && e_tower[i].blood > 0) {
 			return 1;
 		}
 	}
@@ -1107,7 +1305,7 @@ int is_at_obstacle(int x, int y)
 	for (i = 0; i < 10; ++i) {
 		length = sqrt((a_tower[i].pos.x - x)*(a_tower[i].pos.x - x) + 
 				(a_tower[i].pos.y - y)*(a_tower[i].pos.y - y));
-		if (length <= 12) {
+		if (length <= 12 && a_tower[i].blood > 0) {
 			return 1;
 		}
 	}
@@ -1228,6 +1426,7 @@ void hit_system()
 								my->speed = 0;
 								my->target_tower = -1;
 								my->target_bottle = -1;
+								my->kill++;
 							} else {
 								enemy[i]->blood -= true_damage;
 							}
@@ -1244,6 +1443,8 @@ void hit_system()
 							true_damage = get_true_damage(temp->damage, e_tower[i].armor);
 							if (e_tower[i].blood - true_damage <= 0) {
 								e_tower[i].blood = 0;
+								e_tower[i].target = -1;
+								e_tower[i].state = REST;
 
 								my->experience += 500;
 								my->gold += 1000;
@@ -1255,10 +1456,10 @@ void hit_system()
 								my->target_bottle = -1;
 							} else {
 								e_tower[i].blood -= true_damage;
-							}
-							if (e_tower[i].state == REST) {
-								e_tower[i].state = ATTACK_TOWER;
-								e_tower[i].target = 9;
+								if (e_tower[i].state == REST) {
+									e_tower[i].state = ATTACK_TOWER;
+									e_tower[i].target = 9;
+								}
 							}
 							temp->prev->next = temp->next;
 							temp->next->prev = temp->prev;
@@ -1308,6 +1509,8 @@ void hit_system()
 							true_damage = get_true_damage(temp->damage, e_tower[i].armor);
 							if (e_tower[i].blood - true_damage <= 0) {
 								e_tower[i].blood = 0;
+								e_tower[i].target = -1;
+								e_tower[i].state = REST;
 
 								ally[j]->experience += 500;
 								ally[j]->gold += 1000;
@@ -1319,10 +1522,10 @@ void hit_system()
 								ally[j]->target_bottle = -1;
 							} else {
 								e_tower[i].blood -= true_damage;
-							}
-							if (e_tower[i].state == REST) {
-								e_tower[i].state = ATTACK_TOWER;
-								e_tower[i].target = j;
+								if (e_tower[i].state == REST) {
+									e_tower[i].state = ATTACK_TOWER;
+									e_tower[i].target = j;
+								}
 							}
 							temp->prev->next = temp->next;
 							temp->next->prev = temp->prev;
@@ -1377,6 +1580,7 @@ void hit_system()
 								my->direction.x = 0;
 								my->direction.y = 0;
 								my->speed = 0;
+								my->death++;
 
 								enemy[j]->experience += my->level * 200;
 								enemy[j]->gold += 350;
@@ -1437,6 +1641,8 @@ void hit_system()
 						true_damage = get_true_damage(temp->damage, a_tower[i].armor);
 						if (a_tower[i].blood - true_damage <= 0) {
 							a_tower[i].blood = 0;
+							a_tower[i].target = -1;
+							a_tower[i].state = REST;
 
 							enemy[j]->experience += 500;
 							enemy[j]->gold += 1000;
@@ -1448,10 +1654,10 @@ void hit_system()
 							enemy[j]->target_bottle = -1;
 						} else {
 							a_tower[i].blood -= true_damage;
-						}
-						if (a_tower[i].state == REST) {
-							a_tower[i].state = ATTACK_TOWER;
-							a_tower[i].target = j;
+							if (a_tower[i].state == REST) {
+								a_tower[i].state = ATTACK_TOWER;
+								a_tower[i].target = j;
+							}
 						}
 						temp->prev->next = temp->next;
 						temp->next->prev = temp->prev;
@@ -1476,6 +1682,7 @@ void hit_system()
 							my->direction.x = 0;
 							my->direction.y = 0;
 							my->speed = 0;
+							my->death++;
 
 							e_tower[j].state = REST;
 							e_tower[j].target = -1;
@@ -1682,4 +1889,124 @@ void bb_set_materil(int type)
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat_diffuse);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat_specular);
 	glMaterialfv(GL_FRONT, GL_SHININESS, mat_shininess);
+}
+
+void print_num(int number, int count, int x, int y)
+{
+	switch(number) {
+	case 1:
+		glRasterPos2i(x + count*15, y);
+		glDrawPixels(50, 50, GL_BGRA, GL_UNSIGNED_BYTE, num[1]);
+		break;
+	case 2:
+		glRasterPos2i(x + count*15, y);
+		glDrawPixels(50, 50, GL_BGRA, GL_UNSIGNED_BYTE, num[2]);
+		break;
+	case 3:
+		glRasterPos2i(x + count*15, y);
+		glDrawPixels(50, 50, GL_BGRA, GL_UNSIGNED_BYTE, num[3]);
+		break;
+	case 4:
+		glRasterPos2i(x + count*15, y);
+		glDrawPixels(50, 50, GL_BGRA, GL_UNSIGNED_BYTE, num[4]);
+		break;
+	case 5:
+		glRasterPos2i(x + count*15, y);
+		glDrawPixels(50, 50, GL_BGRA, GL_UNSIGNED_BYTE, num[5]);
+		break;
+	case 6:
+		glRasterPos2i(x + count*15, y);
+		glDrawPixels(50, 50, GL_BGRA, GL_UNSIGNED_BYTE, num[6]);
+		break;
+	case 7:
+		glRasterPos2i(x + count*15, y);
+		glDrawPixels(50, 50, GL_BGRA, GL_UNSIGNED_BYTE, num[7]);
+		break;
+	case 8:
+		glRasterPos2i(x + count*15, y);
+		glDrawPixels(50, 50, GL_BGRA, GL_UNSIGNED_BYTE, num[8]);
+		break;
+	case 9:
+		glRasterPos2i(x + count*15, y);
+		glDrawPixels(50, 50, GL_BGRA, GL_UNSIGNED_BYTE, num[9]);
+		break;
+	case 0:
+		glRasterPos2i(x + count*15, y);
+		glDrawPixels(50, 50, GL_BGRA, GL_UNSIGNED_BYTE, num[0]);
+		break;
+	}
+}
+
+void print_number(int print, int x, int y)
+{
+	int printed = 0;
+	int num[5];
+	int temp = print;
+	num[0] = temp / 10000;
+	temp = temp - (temp / 10000)*10000;
+	num[1] = temp / 1000;
+	temp = temp - (temp / 1000)*1000;
+	num[2] = temp / 100;
+	temp = temp - (temp / 100)*100;
+	num[3] = temp / 10;
+	temp = temp - (temp / 10)*10;
+	num[4] = temp;
+	if(num[0] != 0) {
+		print_num(num[0], printed, x, y);
+		++printed;
+	}
+	else {
+		if(printed) {
+			print_num(num[0], printed, x, y);
+			++printed;
+		}
+	}
+
+	if(num[1] != 0) {
+		print_num(num[1], printed, x, y);
+		++printed;
+	}
+	else {
+		if(printed) {
+			print_num(num[1], printed, x, y);
+			++printed;
+		}
+	}
+
+	if(num[2] != 0) {
+		print_num(num[2], printed, x, y);
+		++printed;
+	}
+	else {
+		if(printed) {
+			print_num(num[2], printed, x, y);
+			++printed;
+		}
+	}
+
+	if(num[3] != 0) {
+		print_num(num[3], printed, x, y);
+		++printed;
+	}
+	else {
+		if(printed) {
+			print_num(num[3], printed, x, y);
+			++printed;
+		}
+	}
+
+	if(num[4] != 0) {
+		print_num(num[4], printed, x, y);
+		++printed;
+	}
+	else {
+		if(printed) {
+			print_num(num[4], printed, x, y);
+			++printed;
+		}
+	}
+
+	if(printed == 0) {
+		print_num(0, 0, x, y);
+	}
 }

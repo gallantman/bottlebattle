@@ -3,8 +3,8 @@
 
 #define GAIN 2
 
-#define BULLET_SPEED 6
-#define BOTTLE_SPEED 2
+#define BULLET_SPEED 10
+#define BOTTLE_SPEED 1.5
 
 #define MY_BOTTLE 1
 #define ALLY_BOTTLE 2
@@ -36,6 +36,9 @@ char *small_map;
 char **items;
 char **spells;
 char *num[10];
+char *red;
+char *green;
+char *blue;
 int spell_chosen_map[80];
 GLuint grass_texture;
 GLubyte grass_image[64][64][4];
@@ -50,6 +53,8 @@ GLfloat lig_position[4];
 GLfloat mat_diffuse[4];
 GLfloat mat_specular[4];
 GLfloat mat_shininess[1];
+
+int gold_counter;
 
 struct pos {
 	float x;
@@ -152,6 +157,10 @@ struct bullet {
 struct bullet *bullet_head;
 struct bullet *bullet_tail;
 
+void refresh_gold(void);
+void print_num(int num, int count, int x, int y);
+void print_number(int print, int x, int y);
+void load_color_dot(void);
 void *bb_malloc(int size);
 void adjust_tower_angle(void);
 void refresh_bottle_status(void);
@@ -172,6 +181,7 @@ void refresh_border(void);
 int in_border(void);
 void light_init(void);
 void right_render_choose(void);
+void right_render_choose2(void);
 void init_left_light(void);
 void bb_display(int value);
 void bb_init(void);

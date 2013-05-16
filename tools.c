@@ -168,7 +168,7 @@ int get_true_damage(int damage, int armor)
 {
 	float coeff = (float) 1 / (float) 15;
 	float ratio = (float) (1 - exp(-coeff*armor)) / (float) (1 + exp(-coeff*armor));
-	return (int) (1 - ratio)*damage;
+	return (int) ((1 - ratio)*damage);
 }
 
 int bullet_in_range(struct bullet *temp) {

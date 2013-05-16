@@ -11,6 +11,7 @@ void bb_init()
 	glClearColor(0, 0, 0, 0);
 	state = CHOOSE;
 	light_inited = 0;
+	gold_counter = 0;
 
 	light_init();
 	init_level();
@@ -18,6 +19,9 @@ void bb_init()
 	init_left_light();
 	init_texture();
 	init_bullet_head();
+	glutSetWindow(RIGHT_WINDOW);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA ,GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void init_level()
@@ -164,7 +168,7 @@ void init_creatures()
 	my->item[5] = 36 - 11;
 	my->item[6] = 80 - 11;
 	my->item[7] = 59 - 11;
-	my->gold = 853;
+	my->gold = 84453;
 	my->kill = 0;
 	my->death = 0;
 	my->angle = 0.0;
@@ -219,8 +223,8 @@ void init_creatures()
 	for (j = 0; j < 10; ++j) {
 		enemy[j] = bb_malloc(sizeof(struct hero));
 		enemy[j]->level = 1;
-		enemy[j]->pos.x = 700 - 20*j;
-		enemy[j]->pos.y = 500 + 20*j;
+		enemy[j]->pos.x = 700 - 20*(j+1);
+		enemy[j]->pos.y = 500 + 20*(j+1);
 		enemy[j]->pos.z = 5;
 		enemy[j]->direction.x = enemy[j]->direction.y = enemy[j]->direction.z = 0;
 		enemy[j]->speed = 0;
@@ -266,6 +270,8 @@ void load_textures()
 	load_spells();
 	load_map();
 	load_blank();
+	load_num();
+	load_color_dot();
 }
 
 void load_blank()
@@ -302,7 +308,7 @@ void load_num()
 
 	for (k = 0; k < 10; ++k) {
 		num[k] = bb_malloc(sizeof(char) * 50 * 50 * 4);
-		path[11] = (char) (i + 48);
+		path[11] = (char) (k + 48);
 		path[12] = '\0';
 		fp = fopen(path, "rw+");
 		for (j = 0; j < 50; ++j) {
@@ -485,6 +491,61 @@ void load_spells()
 		}
 		fclose(fp);
 	}
+}
+
+void load_color_dot()
+{
+	FILE *fp = NULL;
+	int i,j;
+	int R,G,B,A;
+	red = bb_malloc(sizeof(char) * 20 * 20 * 4);
+	blue = bb_malloc(sizeof(char) * 20 * 20 * 4);
+	green = bb_malloc(sizeof(char) * 20 * 20 * 4);
+
+	fp = fopen("./data/red","rw+");
+	for (j = 0; j < 20; ++j) {
+		for (i = 0; i < 20; ++i) {
+			R = next(fp);
+			G = next(fp);
+			B = next(fp);
+			A = next(fp);
+			red[(j*20 + i)*4] = (char) R;
+			red[(j*20 + i)*4 + 1] = (char) G;
+			red[(j*20 + i)*4 + 2] = (char) B;
+			red[(j*20 + i)*4 + 3] = (char) A;
+		}
+	}
+	fclose(fp);
+
+	fp = fopen("./data/blue","rw+");
+	for (j = 0; j < 20; ++j) {
+		for (i = 0; i < 20; ++i) {
+			R = next(fp);
+			G = next(fp);
+			B = next(fp);
+			A = next(fp);
+			blue[(j*20 + i)*4] = (char) R;
+			blue[(j*20 + i)*4 + 1] = (char) G;
+			blue[(j*20 + i)*4 + 2] = (char) B;
+			blue[(j*20 + i)*4 + 3] = (char) A;
+		}
+	}
+	fclose(fp);
+
+	fp = fopen("./data/green","rw+");
+	for (j = 0; j < 20; ++j) {
+		for (i = 0; i < 20; ++i) {
+			R = next(fp);
+			G = next(fp);
+			B = next(fp);
+			A = next(fp);
+			green[(j*20 + i)*4] = (char) R;
+			green[(j*20 + i)*4 + 1] = (char) G;
+			green[(j*20 + i)*4 + 2] = (char) B;
+			green[(j*20 + i)*4 + 3] = (char) A;
+		}
+	}
+	fclose(fp);
 }
 
 void get_screen_size()
