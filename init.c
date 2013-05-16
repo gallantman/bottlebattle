@@ -136,8 +136,8 @@ void init_creatures()
 	int i,j;
 	my = bb_malloc(sizeof(struct hero));
 	my->level = 1;
-	my->pos.x = -0;
-	my->pos.y = -0;
+	my->pos.x = -700;
+	my->pos.y = -500;
 	my->pos.z = 5;
 	my->direction.x = my->direction.y = my->direction.z = 0;
 	my->speed = 0;
